@@ -11,15 +11,19 @@ Connect your Gmail inbox. The agent reads all unread emails, categorizes them by
 
 ## ✨ Key Features
 
-- Gmail API integration with OAuth2
-- Automatic email categorization (urgent/normal/spam)
+- Automatic categorization (urgent / important / normal / promotional / spam)
+- Spam & phishing detection
+- Priority scoring (0–100) with action-required flags
 - AI-drafted personalized replies with tone matching
-- One-click approve and send
-- Thread context understanding and follow-up tracking
+- Approve / edit / send workflow per email
+- Category-breakdown and priority charts + downloadable PDF report
+- Built-in demo inbox (no Gmail OAuth required) plus manual paste-in
 
 ## 🛠️ Tech Stack
 
-Python · OpenAI SDK · Gmail API · FastAPI · HTML · Tailwind CSS · JavaScript · OAuth2
+Python · OpenAI GPT-4o-mini · FastAPI · WebSockets · ReportLab · HTML · Tailwind CSS · Chart.js · JavaScript
+
+> Ships with a sample inbox so you can try it with only an OpenAI key. Swap `sample_inbox.py` / the `/send` route for the Gmail API + OAuth2 to run against a real mailbox.
 
 ## ⚙️ Setup
 
@@ -34,7 +38,7 @@ uvicorn main:app --reload
 
 ## 📌 Status
 
-🚧 In development
+✅ Complete
 
 ---
 

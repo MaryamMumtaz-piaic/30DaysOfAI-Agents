@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Email Triage Agent · Day 05</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    @keyframes pulse-dot { 0%,100%{opacity:.35} 50%{opacity:1} }
+    .dot { animation: pulse-dot 1.2s ease-in-out infinite; }
+    body { background: linear-gradient(180deg,#f5f3ff 0%,#f8fafc 40%,#ffffff 100%); }
+    .spin { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg) } }
+    @keyframes pop { 0%{transform:scale(.9);opacity:0} 100%{transform:scale(1);opacity:1} }
+    .pop { animation: pop .22s ease-out; }
+    @keyframes rise { 0%{transform:translateY(12px);opacity:0} 100%{transform:translateY(0);opacity:1} }
+    .rise { animation: rise .4s ease-out both; }
+  </style>
+</head>
+<body class="h-full min-h-screen text-slate-800 antialiased flex flex-col">
+
+  <!-- Navbar -->
+  <nav class="sticky top-0 z-20 backdrop-blur bg-white/80 border-b border-slate-200">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-bold shadow-sm">📬</div>
+        <div class="leading-tight">
+          <p class="font-semibold text-slate-900 text-sm">Smart Email Triage Agent</p>
+          <p class="text-xs text-violet-600 font-medium">This is Day #5 of our 30 Days AI Agent Challenge</p>
+        </div>
+      </div>
+      <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-50 border border-violet-200 text-violet-700 text-xs font-semibold">
+        <span class="w-2 h-2 rounded-full bg-violet-500 dot"></span> Day 05 / 30
+      </span>
+    </div>
+  </nav>
+
+  <main class="flex-1">
+    <div class="max-w-6xl mx-auto px-4 py-8">
+
+      <!-- Hero -->
+      <header class="text-center mb-6">
+        <h1 class="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
+          Smart Email Triage &amp; Auto-Response
+        </h1>
+        <p class="mt-3 text-slate-500 max-w-2xl mx-auto">
+          Load your unread emails and the agent categorizes each by urgency, detects spam,
+          scores priority, flags what needs action, and drafts a personalized reply — ready to approve &amp; send.
+        </p>
+        <div class="mt-4 flex flex-wrap justify-center gap-2 text-xs">
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">🚦 Urgency sorting</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">🛡️ Spam detection</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">✍️ AI reply drafts</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">✅ Approve &amp; send</span>
+        </div>
+      </header>
+
+      <!-- Input card -->
+      <section class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Your name <span class="text-slate-400">(for reply signatures)</span></label>
+            <input id="user-name" type="text" autocomplete="off"
+              placeholder="e.g. Maryam Mumtaz"
+              class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:bg-white" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Inbox source</label>
+            <button id="load-sample" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 text-sm font-medium">📥 Load sample inbox (6 emails)</button>
+          </div>
+        </div>
+
+        <details class="mt-4 group">
+          <summary class="cursor-pointer text-sm text-violet-700 font-medium hover:text-violet-800 select-none">+ Or paste a single email manually</summary>
+          <div class="mt-3 grid sm:grid-cols-2 gap-3">
+            <input id="m-from" type="text" placeholder="From: name &lt;email@domain.com&gt;" class="bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:bg-white" />
+            <input id="m-subject" type="text" placeholder="Subject" class="bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:bg-white" />
+          </div>
+          <textarea id="m-body" rows="4" placeholder="Email body..." class="mt-3 w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:bg-white"></textarea>
+          <button id="add-email" class="mt-2 text-sm text-violet-700 font-medium hover:text-violet-800">+ Add this email to the queue</button>
+        </details>
+
+        <!-- Loaded email pills -->
+        <div id="queue" class="mt-4 hidden">
+          <p class="text-xs font-medium text-slate-500 mb-2"><span id="queue-count">0</span> email(s) queued</p>
+          <div id="queue-pills" class="flex flex-wrap gap-2"></div>
+        </div>
+
+        <div class="flex items-center justify-end mt-4">
+          <button id="run" class="px-6 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold shadow-sm inline-flex items-center gap-2">
+            <span id="run-label">Triage inbox</span>
+            <svg id="spinner" class="hidden spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-opacity=".3"/><path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3"/></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- Progress -->
+      <section id="progress" class="hidden mt-6 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <h2 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-fuchsia-500 dot"></span> Live progress
+        </h2>
+        <ul id="log" class="space-y-1.5 text-sm text-slate-600 font-mono max-h-56 overflow-auto"></ul>
+      </section>
+
+      <!-- Error -->
+      <div id="error" class="hidden mt-6 bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm"></div>
+
+      <!-- Results -->
+      <section id="results" class="hidden mt-6 space-y-6"></section>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-200 bg-white/70">
+    <div class="max-w-6xl mx-auto px-4 py-5 text-center text-sm text-slate-500">
+      Made by <span class="font-semibold text-violet-600">Maryam Mumtaz</span>
+      <span class="mx-1.5 text-slate-300">·</span>
+      AI Engineer &amp; Founder, Marsa Empower
+    </div>
+  </footer>
+
+  <!-- Success popup -->
+  <div id="modal" class="hidden fixed inset-0 z-40 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+    <div class="pop bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
+      <div class="mx-auto w-14 h-14 rounded-full bg-violet-100 flex items-center justify-center">
+        <svg class="w-8 h-8 text-violet-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h3 class="mt-4 text-lg font-bold text-slate-900">Inbox triaged!</h3>
+      <p id="modal-sub" class="mt-1 text-sm text-slate-500">Your priority inbox is ready.</p>
+      <div class="mt-5 flex gap-2">
+        <button id="modal-close" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 text-sm font-medium">View inbox</button>
+        <a id="modal-download" href="#" class="flex-1 px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold inline-flex items-center justify-center gap-1.5">
+          ⬇ Download PDF
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let charts = [];
+    let queue = [];
+    let currentJob = null;
+    let lastData = null;
+
+    function esc(s){ const d=document.createElement("div"); d.textContent=s??""; return d.innerHTML; }
+    function log(stage, msg) {
+      const li = document.createElement("li");
+      li.innerHTML = `<span class="text-violet-600 font-semibold">[${stage}]</span> ${esc(msg)}`;
+      $("log").appendChild(li);
+      $("log").scrollTop = $("log").scrollHeight;
+    }
+
+    function renderQueue() {
+      $("queue-count").textContent = queue.length;
+      $("queue").classList.toggle("hidden", queue.length === 0);
+      $("queue-pills").innerHTML = queue.map((e, i) => `
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-violet-50 border border-violet-200 text-violet-700 text-xs">
+          ${esc((e.subject||"(no subject)").slice(0,40))}
+          <button data-i="${i}" class="rm text-violet-400 hover:text-red-500 font-bold">×</button>
+        </span>`).join("");
+      document.querySelectorAll(".rm").forEach(b => b.addEventListener("click", () => {
+        queue.splice(+b.dataset.i, 1); renderQueue();
+      }));
+    }
+
+    $("load-sample").addEventListener("click", async () => {
+      try {
+        const res = await fetch("/sample");
+        const data = await res.json();
+        queue = data.emails.slice();
+        renderQueue();
+      } catch { $("error").textContent = "Could not load sample inbox."; $("error").classList.remove("hidden"); }
+    });
+
+    $("add-email").addEventListener("click", () => {
+      const from = $("m-from").value.trim();
+      const subject = $("m-subject").value.trim();
+      const body = $("m-body").value.trim();
+      if (!subject && !body) return;
+      queue.push({ id: Date.now(), from, subject, body, received: "just now" });
+      $("m-from").value = ""; $("m-subject").value = ""; $("m-body").value = "";
+      renderQueue();
+    });
+
+    // ---- Category styling ----
+    const CAT = {
+      urgent:      { badge:"text-red-700 bg-red-50 border-red-200", dot:"#dc2626", label:"Urgent" },
+      important:   { badge:"text-orange-700 bg-orange-50 border-orange-200", dot:"#ea580c", label:"Important" },
+      normal:      { badge:"text-blue-700 bg-blue-50 border-blue-200", dot:"#2563eb", label:"Normal" },
+      promotional: { badge:"text-lime-700 bg-lime-50 border-lime-200", dot:"#65a30d", label:"Promotional" },
+      spam:        { badge:"text-slate-600 bg-slate-100 border-slate-300", dot:"#64748b", label:"Spam" },
+    };
+    const catUI = (c) => CAT[(c||"normal").toLowerCase()] || CAT.normal;
+    const sentiment = (s) => ({positive:"🙂",neutral:"😐",negative:"🙁"}[(s||"neutral").toLowerCase()]||"😐");
+
+    function statCards(stats) {
+      const c = (label,value,sub,accent) => `
+        <div class="rise bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+          <p class="text-xs font-medium text-slate-400 uppercase tracking-wide">${label}</p>
+          <p class="mt-1 text-xl font-bold ${accent}">${esc(value)}</p>
+          <p class="text-xs text-slate-500 mt-0.5">${esc(sub)}</p>
+        </div>`;
+      const bc = stats.by_category || {};
+      return `<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        ${c("Processed", String(stats.total||0), "emails triaged", "text-slate-900")}
+        ${c("Need action", String(stats.action_required||0), "flagged for you", "text-red-600")}
+        ${c("Replies drafted", String(stats.replies_drafted||0), "ready to review", "text-violet-600")}
+        ${c("Spam blocked", String(bc.spam||0), "kept out of the way", "text-slate-500")}
+      </div>`;
+    }
+
+    function emailCard(e) {
+      const u = catUI(e.category);
+      const labels = (e.suggested_labels||[]).map(l => `<span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 text-[10px]">${esc(l)}</span>`).join(" ");
+      const replyBlock = e.draft_reply ? `
+        <div class="mt-3 border-t border-slate-100 pt-3">
+          <div class="flex items-center justify-between mb-1.5">
+            <p class="text-xs font-semibold text-slate-500">✍️ AI-drafted reply</p>
+            <button class="edit-toggle text-xs text-violet-600 hover:text-violet-700" data-id="${e.id}">Edit</button>
+          </div>
+          <textarea data-reply="${e.id}" rows="4" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-400" readonly>${esc(e.draft_reply)}</textarea>
+          <div class="flex items-center gap-2 mt-2">
+            <button class="send-btn px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-700 text-white text-xs font-semibold" data-id="${e.id}">✅ Approve &amp; send</button>
+            <span data-status="${e.id}" class="text-xs text-emerald-600 font-medium"></span>
+          </div>
+        </div>` : `<p class="mt-3 text-xs text-slate-400 border-t border-slate-100 pt-3">No reply needed for this email.</p>`;
+      return `<div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm border-l-4" style="border-left-color:${u.dot}">
+        <div class="flex items-start justify-between gap-2 flex-wrap">
+          <div class="min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="px-2 py-0.5 rounded-md border text-xs font-semibold ${u.badge}">${u.label}</span>
+              ${e.action_required ? '<span class="px-2 py-0.5 rounded-md border border-red-200 bg-red-50 text-red-700 text-xs font-semibold">★ Action</span>' : ''}
+              <span class="text-xs text-slate-400">${sentiment(e.sentiment)} · priority ${e.priority||0}</span>
+            </div>
+            <h4 class="mt-1.5 font-bold text-slate-900 truncate">${esc(e.subject||"(no subject)")}</h4>
+            <p class="text-xs text-slate-500">${esc(e.from||"")} ${e.received ? '· '+esc(e.received) : ''}</p>
+          </div>
+        </div>
+        <p class="mt-2 text-sm text-slate-600">${esc(e.summary||"")}</p>
+        ${e.intent ? `<p class="mt-1 text-xs text-slate-400"><span class="font-medium text-slate-500">Intent:</span> ${esc(e.intent)}</p>` : ''}
+        ${labels ? `<div class="mt-2 flex flex-wrap gap-1">${labels}</div>` : ''}
+        ${replyBlock}
+      </div>`;
+    }
+
+    function render(job_id, d) {
+      charts.forEach(c => c.destroy()); charts = [];
+      currentJob = job_id; lastData = d;
+      const emails = d.emails || [];
+
+      $("results").innerHTML = `
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+          <h2 class="text-xl font-bold text-slate-900">Priority Inbox</h2>
+          <a href="/report/${job_id}.pdf" class="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold shadow-sm inline-flex items-center gap-1.5">
+            ⬇ Download PDF report</a>
+        </div>
+        ${statCards(d.stats||{})}
+        <div class="grid lg:grid-cols-2 gap-6">
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="font-semibold text-slate-800 mb-1">📊 Category Breakdown</h3>
+            <p class="text-xs text-slate-400 mb-3">How your inbox splits by type.</p>
+            <canvas id="catChart" height="220"></canvas>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="font-semibold text-slate-800 mb-1">🔥 Priority Scores</h3>
+            <p class="text-xs text-slate-400 mb-3">Higher = handle sooner.</p>
+            <canvas id="priChart" height="220"></canvas>
+          </div>
+        </div>
+        <div class="grid lg:grid-cols-2 gap-4">${emails.map(emailCard).join("")}</div>`;
+      $("results").classList.remove("hidden");
+
+      wireReplyButtons();
+      buildCharts(emails, d.stats||{});
+      showModal(job_id, d.stats||{});
+    }
+
+    function wireReplyButtons() {
+      document.querySelectorAll(".edit-toggle").forEach(b => b.addEventListener("click", () => {
+        const ta = document.querySelector(`[data-reply="${b.dataset.id}"]`);
+        ta.readOnly = !ta.readOnly;
+        b.textContent = ta.readOnly ? "Edit" : "Done";
+        if (!ta.readOnly) ta.focus();
+      }));
+      document.querySelectorAll(".send-btn").forEach(b => b.addEventListener("click", async () => {
+        const id = b.dataset.id;
+        const email = (lastData.emails||[]).find(e => String(e.id) === String(id));
+        const body = document.querySelector(`[data-reply="${id}"]`).value;
+        const status = document.querySelector(`[data-status="${id}"]`);
+        b.disabled = true; b.textContent = "Sending...";
+        try {
+          const res = await fetch("/send", { method:"POST", headers:{"Content-Type":"application/json"},
+            body: JSON.stringify({ to: email?.from||"", subject: "Re: "+(email?.subject||""), body }) });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error||"Send failed");
+          status.textContent = "✓ Sent (demo)";
+          b.textContent = "Sent"; b.classList.replace("bg-violet-600","bg-emerald-600");
+        } catch (err) {
+          status.textContent = "✗ " + err.message; status.classList.replace("text-emerald-600","text-red-600");
+          b.disabled = false; b.textContent = "✅ Approve & send";
+        }
+      }));
+    }
+
+    function buildCharts(emails, stats) {
+      const gridColor = "rgba(148,163,184,0.15)";
+      const baseOpts = { responsive:true, maintainAspectRatio:true,
+        plugins:{ legend:{ position:"bottom", labels:{ usePointStyle:true, padding:16, font:{size:12} } }, tooltip:{ padding:10, cornerRadius:8 } } };
+
+      const order = ["urgent","important","normal","promotional","spam"];
+      const bc = stats.by_category || {};
+      const catData = order.map(c => bc[c]||0);
+      charts.push(new Chart($("catChart"), {
+        type:"doughnut",
+        data:{ labels:order.map(c=>catUI(c).label),
+          datasets:[{ data:catData, backgroundColor:order.map(c=>catUI(c).dot), borderWidth:2, borderColor:"#fff" }]},
+        options:{ ...baseOpts, cutout:"60%" },
+      }));
+
+      const top = emails.slice(0, 10);
+      charts.push(new Chart($("priChart"), {
+        type:"bar",
+        data:{ labels: top.map(e => (e.subject||"(no subject)").slice(0,22)),
+          datasets:[{ label:"Priority", data: top.map(e=>e.priority||0),
+            backgroundColor: top.map(e=>catUI(e.category).dot), borderRadius:6, maxBarThickness:24 }]},
+        options:{ ...baseOpts, indexAxis:"y", plugins:{...baseOpts.plugins, legend:{display:false}},
+          scales:{ x:{ beginAtZero:true, max:100, grid:{color:gridColor} }, y:{ grid:{display:false}, ticks:{font:{size:10}} } } },
+      }));
+    }
+
+    function showModal(job_id, stats) {
+      $("modal-sub").textContent = `${stats.total||0} emails triaged · ${stats.action_required||0} need action · ${stats.replies_drafted||0} replies drafted.`;
+      $("modal-download").href = `/report/${job_id}.pdf`;
+      $("modal").classList.remove("hidden");
+    }
+    function hideModal(){ $("modal").classList.add("hidden"); }
+    $("modal-close").addEventListener("click", () => { hideModal(); $("results").scrollIntoView({behavior:"smooth"}); });
+    $("modal").addEventListener("click", (e) => { if (e.target === $("modal")) hideModal(); });
+    $("modal-download").addEventListener("click", hideModal);
+
+    function start() {
+      if (!queue.length) { $("error").textContent = "Load the sample inbox or add an email first."; $("error").classList.remove("hidden"); return; }
+      const user_name = $("user-name").value.trim();
+
+      $("run").disabled = true;
+      $("run-label").textContent = "Triaging";
+      $("spinner").classList.remove("hidden");
+      $("error").classList.add("hidden");
+      $("results").classList.add("hidden");
+      $("log").innerHTML = "";
+      $("progress").classList.remove("hidden");
+
+      const proto = location.protocol === "https:" ? "wss" : "ws";
+      const ws = new WebSocket(`${proto}://${location.host}/ws/triage`);
+      ws.onopen = () => ws.send(JSON.stringify({ emails: queue, user_name }));
+      ws.onmessage = (ev) => {
+        const m = JSON.parse(ev.data);
+        if (m.type === "progress") log(m.stage, m.message);
+        else if (m.type === "result") render(m.job_id, m.data);
+        else if (m.type === "error") { $("error").textContent = "Error: " + m.message; $("error").classList.remove("hidden"); }
+      };
+      const done = () => { $("run").disabled = false; $("run-label").textContent = "Triage inbox"; $("spinner").classList.add("hidden"); };
+      ws.onclose = done;
+      ws.onerror = () => { $("error").textContent = "Connection error. Is the server running?"; $("error").classList.remove("hidden"); done(); };
+    }
+
+    $("run").addEventListener("click", start);
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") hideModal(); });
+  </script>
+</body>
+</html>
