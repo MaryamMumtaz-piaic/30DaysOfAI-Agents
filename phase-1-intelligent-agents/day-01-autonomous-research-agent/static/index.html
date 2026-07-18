@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Autonomous Deep Research Agent · Day 01</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes pulse-dot { 0%,100%{opacity:.35} 50%{opacity:1} }
+    .dot { animation: pulse-dot 1.2s ease-in-out infinite; }
+    body { background: linear-gradient(180deg,#faf5ff 0%,#f8fafc 40%,#ffffff 100%); }
+  </style>
+</head>
+<body class="h-full min-h-screen text-slate-800 antialiased flex flex-col">
+
+  <!-- Navbar -->
+  <nav class="sticky top-0 z-20 backdrop-blur bg-white/80 border-b border-slate-200">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-bold shadow-sm">🤖</div>
+        <div class="leading-tight">
+          <p class="font-semibold text-slate-900 text-sm">Autonomous Deep Research Agent</p>
+          <p class="text-xs text-violet-600 font-medium">This is Day #1 of our 30 Days AI Agent Challenge</p>
+        </div>
+      </div>
+      <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-50 border border-violet-200 text-violet-700 text-xs font-semibold">
+        <span class="w-2 h-2 rounded-full bg-violet-500 dot"></span> Day 01 / 30
+      </span>
+    </div>
+  </nav>
+
+  <main class="flex-1">
+    <div class="max-w-4xl mx-auto px-4 py-10">
+
+      <!-- Hero -->
+      <header class="text-center mb-8">
+        <h1 class="text-4xl font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
+          Autonomous Deep Research Agent
+        </h1>
+        <p class="mt-3 text-slate-500 max-w-2xl mx-auto">
+          Enter any topic. The agent spawns sub-queries, scrapes 10+ sources in parallel,
+          cross-validates facts, scores confidence, and generates a citation-rich PDF report.
+        </p>
+      </header>
+
+      <!-- Query box -->
+      <section class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <label class="block text-sm font-medium text-slate-700 mb-2">Research topic</label>
+        <div class="flex flex-col sm:flex-row gap-3">
+          <input id="topic" type="text" autocomplete="off"
+            placeholder="e.g. Impact of quantum computing on modern cryptography"
+            class="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:bg-white" />
+          <button id="run"
+            class="px-6 py-3 rounded-xl bg-violet-600 hover:bg-violet-700 text-white disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition shadow-sm">
+            Research
+          </button>
+        </div>
+      </section>
+
+      <!-- Progress -->
+      <section id="progress" class="hidden mt-6 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <h2 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 dot"></span> Live progress
+        </h2>
+        <ul id="log" class="space-y-1.5 text-sm text-slate-600 font-mono max-h-64 overflow-auto"></ul>
+      </section>
+
+      <!-- Error -->
+      <div id="error" class="hidden mt-6 bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm"></div>
+
+      <!-- Results -->
+      <section id="results" class="hidden mt-6 space-y-6"></section>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-200 bg-white/70">
+    <div class="max-w-5xl mx-auto px-4 py-5 text-center text-sm text-slate-500">
+      Made by <span class="font-semibold text-violet-600">Maryam Mumtaz</span>
+      <span class="mx-1.5 text-slate-300">·</span>
+      AI Engineer &amp; Founder, Marsa Empower
+    </div>
+  </footer>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const topicEl = $("topic"), runBtn = $("run");
+    const progressEl = $("progress"), logEl = $("log");
+    const resultsEl = $("results"), errorEl = $("error");
+
+    function log(stage, msg) {
+      const li = document.createElement("li");
+      li.innerHTML = `<span class="text-violet-600 font-semibold">[${stage}]</span> ${msg}`;
+      logEl.appendChild(li);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function confColor(c) {
+      if (c >= 0.75) return "text-emerald-700 bg-emerald-50 border-emerald-200";
+      if (c >= 0.55) return "text-yellow-700 bg-yellow-50 border-yellow-200";
+      return "text-red-700 bg-red-50 border-red-200";
+    }
+
+    function esc(s) {
+      const d = document.createElement("div");
+      d.textContent = s ?? "";
+      return d.innerHTML;
+    }
+
+    function renderResult(job_id, data) {
+      const insights = (data.key_insights || [])
+        .map(i => `<li class="flex gap-2"><span class="text-violet-500">▸</span><span>${esc(i)}</span></li>`).join("");
+
+      const claims = (data.claims || []).map(c => {
+        const pct = Math.round(c.confidence * 100);
+        const cls = confColor(c.confidence);
+        const cites = (c.supporting_sources || []).length
+          ? `<div class="mt-1 text-xs text-slate-400 truncate">${esc(c.supporting_sources.join(", "))}</div>` : "";
+        return `<div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+          <span class="inline-block px-2 py-0.5 rounded-md border text-xs font-semibold ${cls}">${pct}%</span>
+          <span class="ml-2 text-slate-700">${esc(c.text)}</span>${cites}</div>`;
+      }).join("");
+
+      const contradictions = (data.contradictions || []).length
+        ? `<div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+             <h3 class="font-semibold text-red-600 mb-2">⚠ Detected Contradictions</h3>
+             <ul class="space-y-1.5 text-sm text-slate-600 list-disc list-inside">
+               ${data.contradictions.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : "";
+
+      const sources = (data.sources || []).map((s, i) =>
+        `<li class="flex gap-2 text-sm items-center">
+           <span class="text-slate-400">[${i + 1}]</span>
+           <a href="${esc(s.url)}" target="_blank" class="text-blue-600 hover:underline truncate">${esc(s.title)}</a>
+           ${s.scraped ? '<span class="text-emerald-600 text-xs">✓</span>' : '<span class="text-slate-300 text-xs">○</span>'}
+         </li>`).join("");
+
+      resultsEl.innerHTML = `
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+          <div class="flex items-start justify-between gap-4">
+            <h2 class="text-xl font-bold text-slate-900">${esc(data.topic)}</h2>
+            <a href="/report/${job_id}.pdf"
+               class="shrink-0 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow-sm">
+               ⬇ Download PDF</a>
+          </div>
+          <p class="mt-3 text-slate-600 leading-relaxed whitespace-pre-line">${esc(data.summary)}</p>
+        </div>
+        ${insights ? `<div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+          <h3 class="font-semibold text-slate-800 mb-3">Key Insights</h3>
+          <ul class="space-y-1.5 text-sm text-slate-600">${insights}</ul></div>` : ""}
+        ${claims ? `<div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+          <h3 class="font-semibold text-slate-800 mb-3">Validated Claims &amp; Confidence</h3>
+          <div class="space-y-2">${claims}</div></div>` : ""}
+        ${contradictions}
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+          <h3 class="font-semibold text-slate-800 mb-3">Sources (${(data.sources||[]).length})</h3>
+          <ul class="space-y-1.5">${sources}</ul></div>`;
+      resultsEl.classList.remove("hidden");
+    }
+
+    function start() {
+      const topic = topicEl.value.trim();
+      if (!topic) { topicEl.focus(); return; }
+
+      runBtn.disabled = true;
+      errorEl.classList.add("hidden");
+      resultsEl.classList.add("hidden");
+      resultsEl.innerHTML = "";
+      logEl.innerHTML = "";
+      progressEl.classList.remove("hidden");
+
+      const proto = location.protocol === "https:" ? "wss" : "ws";
+      const ws = new WebSocket(`${proto}://${location.host}/ws/research`);
+
+      ws.onopen = () => ws.send(JSON.stringify({ topic }));
+      ws.onmessage = (ev) => {
+        const m = JSON.parse(ev.data);
+        if (m.type === "progress") log(m.stage, m.message);
+        else if (m.type === "result") { renderResult(m.job_id, m.data); runBtn.disabled = false; }
+        else if (m.type === "error") {
+          errorEl.textContent = "Error: " + m.message;
+          errorEl.classList.remove("hidden");
+          runBtn.disabled = false;
+        }
+      };
+      ws.onerror = () => {
+        errorEl.textContent = "Connection error. Is the server running?";
+        errorEl.classList.remove("hidden");
+        runBtn.disabled = false;
+      };
+      ws.onclose = () => { runBtn.disabled = false; };
+    }
+
+    runBtn.addEventListener("click", start);
+    topicEl.addEventListener("keydown", (e) => { if (e.key === "Enter") start(); });
+  </script>
+</body>
+</html>
