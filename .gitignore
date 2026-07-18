@@ -1,0 +1,104 @@
+# ─── Environment & Secrets ───────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+token.json
+secrets/
+service-account*.json
+
+# ─── Python ──────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ─── Virtual Environments ────────────────────────────────
+venv/
+env/
+ENV/
+.venv/
+env.bak/
+venv.bak/
+
+# ─── Testing & Coverage ──────────────────────────────────
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+
+# ─── Jupyter / Notebooks ─────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# ─── Databases ───────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+chroma_db/
+*.chroma
+
+# ─── Machine Learning Artifacts ──────────────────────────
+*.pkl
+*.h5
+*.model
+*.joblib
+mlruns/
+models/checkpoints/
+
+# ─── Logs ────────────────────────────────────────────────
+*.log
+logs/
+npm-debug.log*
+
+# ─── Node / Frontend ─────────────────────────────────────
+node_modules/
+dist/
+.next/
+.parcel-cache/
+
+# ─── IDE & Editors ───────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ─── OS Files ────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── Docker ──────────────────────────────────────────────
+*.pid
+
+# ─── Uploads & Temp ──────────────────────────────────────
+uploads/
+tmp/
+temp/
+*.tmp
