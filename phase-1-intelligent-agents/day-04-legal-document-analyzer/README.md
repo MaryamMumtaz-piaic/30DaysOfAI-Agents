@@ -11,15 +11,17 @@ Upload any legal document (contract, NDA, terms of service) and the agent perfor
 
 ## ✨ Key Features
 
-- Clause-by-clause legal risk scoring
-- Red/yellow/green risk flagging system
-- Missing clause detection
-- Recommended contract edits with legal rationale
-- Side-by-side original vs. improved document view
+- Clause-by-clause legal risk scoring (green / yellow / red)
+- Overall risk gauge with clause-level breakdown charts
+- Missing standard-protection detection
+- Recommended redline edits with side-by-side original vs. improved wording
+- PDF / TXT upload (drag-and-drop) plus paste-text input
+- Live WebSocket progress streaming
+- Downloadable PDF audit report
 
 ## 🛠️ Tech Stack
 
-Python · OpenAI GPT-4o · PyPDF2 · FastAPI · HTML · Tailwind CSS · JavaScript · PDF.js · Pydantic
+Python · OpenAI GPT-4o-mini · pypdf · FastAPI · WebSockets · ReportLab · HTML · Tailwind CSS · Chart.js · JavaScript
 
 ## ⚙️ Setup
 
@@ -34,7 +36,7 @@ uvicorn main:app --reload
 
 ## 📌 Status
 
-🚧 In development
+✅ Complete
 
 ---
 

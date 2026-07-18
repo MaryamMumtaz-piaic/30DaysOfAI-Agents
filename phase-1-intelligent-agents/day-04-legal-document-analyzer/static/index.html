@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Legal Document Analyzer · Day 04</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    @keyframes pulse-dot { 0%,100%{opacity:.35} 50%{opacity:1} }
+    .dot { animation: pulse-dot 1.2s ease-in-out infinite; }
+    body { background: linear-gradient(180deg,#eef2ff 0%,#f8fafc 40%,#ffffff 100%); }
+    .spin { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg) } }
+    @keyframes pop { 0%{transform:scale(.9);opacity:0} 100%{transform:scale(1);opacity:1} }
+    .pop { animation: pop .22s ease-out; }
+    @keyframes rise { 0%{transform:translateY(12px);opacity:0} 100%{transform:translateY(0);opacity:1} }
+    .rise { animation: rise .4s ease-out both; }
+  </style>
+</head>
+<body class="h-full min-h-screen text-slate-800 antialiased flex flex-col">
+
+  <!-- Navbar -->
+  <nav class="sticky top-0 z-20 backdrop-blur bg-white/80 border-b border-slate-200">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-white font-bold shadow-sm">⚖️</div>
+        <div class="leading-tight">
+          <p class="font-semibold text-slate-900 text-sm">Legal Document Analyzer</p>
+          <p class="text-xs text-indigo-600 font-medium">This is Day #4 of our 30 Days AI Agent Challenge</p>
+        </div>
+      </div>
+      <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold">
+        <span class="w-2 h-2 rounded-full bg-indigo-500 dot"></span> Day 04 / 30
+      </span>
+    </div>
+  </nav>
+
+  <main class="flex-1">
+    <div class="max-w-6xl mx-auto px-4 py-8">
+
+      <!-- Hero -->
+      <header class="text-center mb-6">
+        <h1 class="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
+          AI Legal Document Analyzer &amp; Risk Auditor
+        </h1>
+        <p class="mt-3 text-slate-500 max-w-2xl mx-auto">
+          Upload a contract, NDA, or terms of service. The agent scores each clause's risk,
+          flags dangerous terms in red, finds missing protections, and drafts redline edits.
+        </p>
+        <div class="mt-4 flex flex-wrap justify-center gap-2 text-xs">
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">🚦 Clause risk scoring</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">🔎 Missing clauses</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">✍️ Redline edits</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">📄 PDF audit report</span>
+        </div>
+      </header>
+
+      <!-- Input card -->
+      <section class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <!-- Dropzone -->
+        <div id="drop" class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/40 transition">
+          <input id="file" type="file" accept=".pdf,.txt,.md" class="hidden" />
+          <div class="mx-auto w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center text-2xl">📄</div>
+          <p class="mt-2 text-sm font-medium text-slate-700">Drop a PDF or text file here, or <span class="text-indigo-600">browse</span></p>
+          <p id="file-info" class="mt-1 text-xs text-slate-400">PDF, TXT, or MD · up to 8 MB</p>
+        </div>
+
+        <div class="flex items-center gap-3 my-4">
+          <div class="flex-1 h-px bg-slate-200"></div>
+          <span class="text-xs text-slate-400 font-medium">or paste text</span>
+          <div class="flex-1 h-px bg-slate-200"></div>
+        </div>
+
+        <textarea id="text" rows="5" placeholder="Paste the contract / NDA / terms of service text here..."
+          class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"></textarea>
+
+        <div class="grid sm:grid-cols-2 gap-4 mt-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Document type <span class="text-slate-400">(optional)</span></label>
+            <input id="doc-type" type="text" autocomplete="off"
+              placeholder="e.g. Mutual NDA, Employment contract"
+              class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Your role <span class="text-slate-400">(optional)</span></label>
+            <input id="party" type="text" autocomplete="off"
+              placeholder="e.g. Contractor, Tenant, Buyer"
+              class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white" />
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between mt-4">
+          <button id="sample" class="text-sm text-indigo-700 font-medium hover:text-indigo-800">Load sample NDA</button>
+          <button id="run" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-sm inline-flex items-center gap-2">
+            <span id="run-label">Analyze document</span>
+            <svg id="spinner" class="hidden spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-opacity=".3"/><path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3"/></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- Progress -->
+      <section id="progress" class="hidden mt-6 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <h2 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-violet-500 dot"></span> Live progress
+        </h2>
+        <ul id="log" class="space-y-1.5 text-sm text-slate-600 font-mono max-h-56 overflow-auto"></ul>
+      </section>
+
+      <!-- Error -->
+      <div id="error" class="hidden mt-6 bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm"></div>
+
+      <!-- Results -->
+      <section id="results" class="hidden mt-6 space-y-6"></section>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-200 bg-white/70">
+    <div class="max-w-6xl mx-auto px-4 py-5 text-center text-sm text-slate-500">
+      Made by <span class="font-semibold text-indigo-600">Maryam Mumtaz</span>
+      <span class="mx-1.5 text-slate-300">·</span>
+      AI Engineer &amp; Founder, Marsa Empower
+    </div>
+  </footer>
+
+  <!-- Success popup -->
+  <div id="modal" class="hidden fixed inset-0 z-40 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+    <div class="pop bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
+      <div class="mx-auto w-14 h-14 rounded-full bg-indigo-100 flex items-center justify-center">
+        <svg class="w-8 h-8 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h3 class="mt-4 text-lg font-bold text-slate-900">Audit ready!</h3>
+      <p id="modal-sub" class="mt-1 text-sm text-slate-500">Your legal risk analysis is complete.</p>
+      <div class="mt-5 flex gap-2">
+        <button id="modal-close" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 text-sm font-medium">View results</button>
+        <a id="modal-download" href="#" class="flex-1 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold inline-flex items-center justify-center gap-1.5">
+          ⬇ Download PDF
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let charts = [];
+    let currentJob = null;
+
+    function esc(s){ const d=document.createElement("div"); d.textContent=s??""; return d.innerHTML; }
+    function log(stage, msg) {
+      const li = document.createElement("li");
+      li.innerHTML = `<span class="text-indigo-600 font-semibold">[${stage}]</span> ${esc(msg)}`;
+      $("log").appendChild(li);
+      $("log").scrollTop = $("log").scrollHeight;
+    }
+
+    // ---- File upload / dropzone ----
+    $("drop").addEventListener("click", () => $("file").click());
+    $("file").addEventListener("change", (e) => { if (e.target.files[0]) uploadFile(e.target.files[0]); });
+    ["dragover","dragenter"].forEach(ev => $("drop").addEventListener(ev, (e) => {
+      e.preventDefault(); $("drop").classList.add("border-indigo-500","bg-indigo-50/60");
+    }));
+    ["dragleave","drop"].forEach(ev => $("drop").addEventListener(ev, (e) => {
+      e.preventDefault(); $("drop").classList.remove("border-indigo-500","bg-indigo-50/60");
+    }));
+    $("drop").addEventListener("drop", (e) => { if (e.dataTransfer.files[0]) uploadFile(e.dataTransfer.files[0]); });
+
+    async function uploadFile(file) {
+      $("file-info").textContent = `Reading ${file.name}...`;
+      $("error").classList.add("hidden");
+      const fd = new FormData();
+      fd.append("file", file);
+      try {
+        const res = await fetch("/extract", { method: "POST", body: fd });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Upload failed");
+        $("text").value = data.text;
+        $("file-info").innerHTML = `<span class="text-indigo-600 font-medium">✓ ${esc(file.name)}</span> · ${data.chars.toLocaleString()} characters extracted`;
+      } catch (err) {
+        $("file-info").textContent = "PDF, TXT, or MD · up to 8 MB";
+        $("error").textContent = "Error: " + err.message;
+        $("error").classList.remove("hidden");
+      }
+    }
+
+    $("sample").addEventListener("click", () => {
+      $("doc-type").value = "Mutual Non-Disclosure Agreement";
+      $("party").value = "Receiving Party (Contractor)";
+      $("text").value = SAMPLE_NDA;
+      $("file-info").textContent = "Sample NDA loaded into the text box";
+    });
+
+    const riskUI = (r) => ({
+      red:    { badge:"text-red-700 bg-red-50 border-red-200", bar:"#dc2626", label:"High risk" },
+      yellow: { badge:"text-amber-700 bg-amber-50 border-amber-200", bar:"#d97706", label:"Negotiate" },
+      green:  { badge:"text-emerald-700 bg-emerald-50 border-emerald-200", bar:"#16a34a", label:"Standard" },
+    }[(r||"green").toLowerCase()] || { badge:"text-slate-600 bg-slate-50 border-slate-200", bar:"#64748b", label:"—" });
+
+    const impBadge = (i) => ({
+      high:   "text-red-700 bg-red-50 border-red-200",
+      medium: "text-amber-700 bg-amber-50 border-amber-200",
+      low:    "text-slate-600 bg-slate-50 border-slate-200",
+    }[(i||"medium").toLowerCase()] || "text-slate-600 bg-slate-50 border-slate-200");
+
+    function highlights(d) {
+      const s = d.stats || {};
+      const score = Number(d.overall_risk_score)||0;
+      const gaugeColor = score>=66 ? "text-red-600" : score>=33 ? "text-amber-600" : "text-emerald-600";
+      const card = (label,value,sub,accent) => `
+        <div class="rise bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+          <p class="text-xs font-medium text-slate-400 uppercase tracking-wide">${label}</p>
+          <p class="mt-1 text-xl font-bold ${accent}">${esc(value)}</p>
+          <p class="text-xs text-slate-500 mt-0.5">${esc(sub)}</p>
+        </div>`;
+      return `<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        ${card("Overall risk", score+"/100", (d.risk_level||"medium")+" risk", gaugeColor)}
+        ${card("High-risk clauses", String(s.red||0), "flagged red", "text-red-600")}
+        ${card("To negotiate", String(s.yellow||0), "flagged yellow", "text-amber-600")}
+        ${card("Missing clauses", String(s.missing||0), "protections absent", "text-violet-600")}
+      </div>`;
+    }
+
+    function render(job_id, d) {
+      charts.forEach(c => c.destroy()); charts = [];
+      currentJob = job_id;
+      const clauses = d.clauses || [];
+
+      const clauseCards = clauses.map(c => {
+        const u = riskUI(c.risk);
+        const rs = Number(c.risk_score)||0;
+        return `<div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm border-l-4" style="border-left-color:${u.bar}">
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <h4 class="font-bold text-slate-900">${esc(c.title)}</h4>
+            <span class="px-2 py-0.5 rounded-md border text-xs font-semibold ${u.badge}">${u.label} · ${rs}/100</span>
+          </div>
+          ${c.excerpt ? `<p class="mt-1.5 text-xs italic text-slate-400 border-l-2 border-slate-200 pl-2">"${esc(c.excerpt)}"</p>` : ""}
+          ${c.issue ? `<p class="mt-2 text-sm text-slate-600"><span class="font-medium text-slate-700">Issue:</span> ${esc(c.issue)}</p>` : ""}
+          ${c.recommendation ? `<p class="mt-1 text-sm text-slate-600"><span class="font-medium text-emerald-700">Fix:</span> ${esc(c.recommendation)}</p>` : ""}
+        </div>`;
+      }).join("");
+
+      const missing = (d.missing_clauses||[]).map(m => `
+        <div class="flex items-start gap-3 py-2.5 border-t border-slate-100 first:border-0">
+          <span class="px-2 py-0.5 rounded-md border text-xs font-semibold ${impBadge(m.importance)}">${esc((m.importance||"med").toUpperCase())}</span>
+          <div>
+            <p class="text-sm font-medium text-slate-800">${esc(m.name)}</p>
+            <p class="text-xs text-slate-500">${esc(m.rationale)}</p>
+          </div>
+        </div>`).join("");
+
+      const edits = (d.recommended_edits||[]).map(e => `
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+          <p class="font-semibold text-indigo-700 mb-2">${esc(e.clause)}</p>
+          <div class="grid md:grid-cols-2 gap-3">
+            <div class="rounded-lg border border-red-200 bg-red-50/50 p-3">
+              <p class="text-xs font-semibold text-red-700 mb-1">Original</p>
+              <p class="text-xs text-slate-600">${esc(e.original)}</p>
+            </div>
+            <div class="rounded-lg border border-emerald-200 bg-emerald-50/50 p-3">
+              <p class="text-xs font-semibold text-emerald-700 mb-1">Suggested</p>
+              <p class="text-xs text-slate-600">${esc(e.improved)}</p>
+            </div>
+          </div>
+          ${e.rationale ? `<p class="mt-2 text-sm text-slate-600"><span class="font-medium text-slate-700">Rationale:</span> ${esc(e.rationale)}</p>` : ""}
+        </div>`).join("");
+
+      const flags = (d.red_flags||[]).map(f => `<li class="flex gap-2"><span class="text-red-500">⚠</span><span>${esc(f)}</span></li>`).join("");
+
+      $("results").innerHTML = `
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">${esc(d.doc_type||"Document")}</h2>
+            <p class="text-sm text-slate-500">Risk scored from: ${esc(d.party_analyzed||"signing party")}</p>
+          </div>
+          <a href="/report/${job_id}.pdf" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-sm inline-flex items-center gap-1.5">
+            ⬇ Download PDF report</a>
+        </div>
+        ${highlights(d)}
+        ${d.truncated ? `<div class="bg-amber-50 border border-amber-200 text-amber-700 rounded-xl p-3 text-sm">⚠ Document was long — only the first portion was analyzed.</div>` : ""}
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+          <h3 class="font-semibold text-slate-800 mb-1.5">Summary</h3>
+          <p class="text-slate-600">${esc(d.summary)}</p>
+        </div>
+        <div class="grid lg:grid-cols-2 gap-6">
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="font-semibold text-slate-800 mb-1">🚦 Risk Breakdown</h3>
+            <p class="text-xs text-slate-400 mb-3">How clauses split across risk levels.</p>
+            <canvas id="riskChart" height="220"></canvas>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="font-semibold text-slate-800 mb-1">📊 Clause Risk Scores</h3>
+            <p class="text-xs text-slate-400 mb-3">Higher = more risk to you.</p>
+            <canvas id="clauseChart" height="220"></canvas>
+          </div>
+        </div>
+        ${flags ? `<div class="bg-white border border-red-200 rounded-2xl p-5 shadow-sm">
+          <h3 class="font-semibold text-red-700 mb-3">⚠ Key Red Flags</h3>
+          <ul class="space-y-1.5 text-sm text-slate-700">${flags}</ul></div>` : ""}
+        <div>
+          <h3 class="font-semibold text-slate-800 mb-3">🔍 Clause-by-Clause Analysis</h3>
+          <div class="grid lg:grid-cols-2 gap-4">${clauseCards || '<p class="text-slate-400 text-sm">No clauses returned.</p>'}</div>
+        </div>
+        ${missing ? `<div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+          <h3 class="font-semibold text-slate-800 mb-1">🔎 Missing Standard Protections</h3>
+          <div>${missing}</div></div>` : ""}
+        ${edits ? `<div>
+          <h3 class="font-semibold text-slate-800 mb-3">✍️ Recommended Redline Edits</h3>
+          <div class="space-y-4">${edits}</div></div>` : ""}
+        <p class="text-xs text-slate-400 text-center">This automated audit is informational only and is not a substitute for a licensed attorney.</p>`;
+      $("results").classList.remove("hidden");
+
+      buildCharts(d);
+      showModal(job_id, d);
+    }
+
+    function buildCharts(d) {
+      const s = d.stats || {};
+      const gridColor = "rgba(148,163,184,0.15)";
+      const baseOpts = {
+        responsive:true, maintainAspectRatio:true,
+        plugins:{ legend:{ position:"bottom", labels:{ usePointStyle:true, padding:16, font:{size:12} } },
+                  tooltip:{ padding:10, cornerRadius:8 } },
+      };
+
+      charts.push(new Chart($("riskChart"), {
+        type: "doughnut",
+        data: { labels:["High risk","Negotiate","Standard"],
+          datasets:[{ data:[s.red||0, s.yellow||0, s.green||0],
+            backgroundColor:["#dc2626","#d97706","#16a34a"], borderWidth:2, borderColor:"#fff" }]},
+        options: { ...baseOpts, cutout:"62%" },
+      }));
+
+      const clauses = (d.clauses||[]).slice(0, 12);
+      const labels = clauses.map(c => c.title);
+      const scores = clauses.map(c => Number(c.risk_score)||0);
+      const barColors = clauses.map(c => riskUI(c.risk).bar);
+      charts.push(new Chart($("clauseChart"), {
+        type: "bar",
+        data: { labels, datasets:[{ label:"Risk score", data:scores, backgroundColor:barColors, borderRadius:6, maxBarThickness:26 }]},
+        options: { ...baseOpts, indexAxis:"y", plugins:{ ...baseOpts.plugins, legend:{display:false} },
+          scales:{ x:{ beginAtZero:true, max:100, grid:{color:gridColor} }, y:{ grid:{display:false}, ticks:{font:{size:10}} } } },
+      }));
+    }
+
+    function showModal(job_id, d) {
+      const s = d.stats || {};
+      $("modal-sub").textContent = `Reviewed ${s.clauses_reviewed||0} clauses · ${s.red||0} high-risk · overall risk ${d.overall_risk_score||0}/100.`;
+      $("modal-download").href = `/report/${job_id}.pdf`;
+      $("modal").classList.remove("hidden");
+    }
+    function hideModal(){ $("modal").classList.add("hidden"); }
+    $("modal-close").addEventListener("click", () => { hideModal(); $("results").scrollIntoView({behavior:"smooth"}); });
+    $("modal").addEventListener("click", (e) => { if (e.target === $("modal")) hideModal(); });
+    $("modal-download").addEventListener("click", hideModal);
+
+    function start() {
+      const text = $("text").value.trim();
+      const doc_type = $("doc-type").value.trim();
+      const party = $("party").value.trim();
+      if (text.length < 40) { $("error").textContent = "Please upload or paste a document (at least 40 characters)."; $("error").classList.remove("hidden"); $("text").focus(); return; }
+
+      $("run").disabled = true;
+      $("run-label").textContent = "Analyzing";
+      $("spinner").classList.remove("hidden");
+      $("error").classList.add("hidden");
+      $("results").classList.add("hidden");
+      $("log").innerHTML = "";
+      $("progress").classList.remove("hidden");
+
+      const proto = location.protocol === "https:" ? "wss" : "ws";
+      const ws = new WebSocket(`${proto}://${location.host}/ws/analyze`);
+      ws.onopen = () => ws.send(JSON.stringify({ text, doc_type, party }));
+      ws.onmessage = (ev) => {
+        const m = JSON.parse(ev.data);
+        if (m.type === "progress") log(m.stage, m.message);
+        else if (m.type === "result") render(m.job_id, m.data);
+        else if (m.type === "error") { $("error").textContent = "Error: " + m.message; $("error").classList.remove("hidden"); }
+      };
+      const done = () => { $("run").disabled = false; $("run-label").textContent = "Analyze document"; $("spinner").classList.add("hidden"); };
+      ws.onclose = done;
+      ws.onerror = () => { $("error").textContent = "Connection error. Is the server running?"; $("error").classList.remove("hidden"); done(); };
+    }
+
+    $("run").addEventListener("click", start);
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") hideModal(); });
+
+    const SAMPLE_NDA = `MUTUAL NON-DISCLOSURE AGREEMENT
+
+This Mutual Non-Disclosure Agreement ("Agreement") is entered into as of the date of last signature below between the parties.
+
+1. CONFIDENTIAL INFORMATION. "Confidential Information" means any and all information disclosed by either party, whether or not marked as confidential, including but not limited to business plans, customer lists, and technical data.
+
+2. OBLIGATIONS. The Receiving Party shall hold all Confidential Information in strict confidence and shall not disclose it to any third party without prior written consent.
+
+3. TERM. This Agreement shall remain in effect in perpetuity, and the confidentiality obligations shall survive indefinitely regardless of termination.
+
+4. INDEMNIFICATION. The Receiving Party shall indemnify, defend, and hold harmless the Disclosing Party from any and all claims, damages, and losses of any kind arising from any use of the Confidential Information, without limitation of liability.
+
+5. NON-COMPETE. The Receiving Party agrees not to engage in any business that competes with the Disclosing Party for a period of five (5) years in any jurisdiction worldwide.
+
+6. GOVERNING LAW. This Agreement shall be governed by the laws of the State of Delaware. Any disputes shall be resolved exclusively in the courts of Delaware, and the prevailing party shall be entitled to attorneys' fees.
+
+7. ASSIGNMENT. The Disclosing Party may assign this Agreement to any third party at its sole discretion without notice to the Receiving Party.`;
+  </script>
+</body>
+</html>
