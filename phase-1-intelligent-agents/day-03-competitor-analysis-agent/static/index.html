@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Competitor Intelligence Agent · Day 03</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    @keyframes pulse-dot { 0%,100%{opacity:.35} 50%{opacity:1} }
+    .dot { animation: pulse-dot 1.2s ease-in-out infinite; }
+    body { background: linear-gradient(180deg,#ecfeff 0%,#f8fafc 40%,#ffffff 100%); }
+    .spin { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg) } }
+    @keyframes pop { 0%{transform:scale(.9);opacity:0} 100%{transform:scale(1);opacity:1} }
+    .pop { animation: pop .22s ease-out; }
+    @keyframes rise { 0%{transform:translateY(12px);opacity:0} 100%{transform:translateY(0);opacity:1} }
+    .rise { animation: rise .4s ease-out both; }
+  </style>
+</head>
+<body class="h-full min-h-screen text-slate-800 antialiased flex flex-col">
+
+  <!-- Navbar -->
+  <nav class="sticky top-0 z-20 backdrop-blur bg-white/80 border-b border-slate-200">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center text-white font-bold shadow-sm">🔍</div>
+        <div class="leading-tight">
+          <p class="font-semibold text-slate-900 text-sm">Competitor Intelligence Agent</p>
+          <p class="text-xs text-teal-600 font-medium">This is Day #3 of our 30 Days AI Agent Challenge</p>
+        </div>
+      </div>
+      <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 border border-teal-200 text-teal-700 text-xs font-semibold">
+        <span class="w-2 h-2 rounded-full bg-teal-500 dot"></span> Day 03 / 30
+      </span>
+    </div>
+  </nav>
+
+  <main class="flex-1">
+    <div class="max-w-6xl mx-auto px-4 py-8">
+
+      <!-- Hero -->
+      <header class="text-center mb-6">
+        <h1 class="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-teal-600 to-emerald-600 bg-clip-text text-transparent">
+          Real-Time Competitor Intelligence
+        </h1>
+        <p class="mt-3 text-slate-500 max-w-2xl mx-auto">
+          Enter your niche and competitor sites. The agent scrapes each one, builds a SWOT matrix,
+          compares pricing &amp; features, gauges sentiment, and recommends your strategy.
+        </p>
+        <div class="mt-4 flex flex-wrap justify-center gap-2 text-xs">
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">🧭 SWOT matrix</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">💲 Pricing compare</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">📊 Feature gaps</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">🎯 Strategy</span>
+        </div>
+      </header>
+
+      <!-- Input card -->
+      <section class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Your business niche</label>
+            <input id="niche" type="text" autocomplete="off"
+              placeholder="e.g. AI-powered project management SaaS"
+              class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Sample</label>
+            <button id="sample" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 text-sm font-medium">Load example (PM tools)</button>
+          </div>
+        </div>
+
+        <label class="block text-sm font-medium text-slate-700 mt-4 mb-1.5">Competitor websites</label>
+        <div id="urls" class="space-y-2"></div>
+        <div class="flex items-center justify-between mt-3">
+          <button id="add" class="text-sm text-teal-700 font-medium hover:text-teal-800">+ Add competitor</button>
+          <button id="run" class="px-6 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold shadow-sm inline-flex items-center gap-2">
+            <span id="run-label">Analyze competitors</span>
+            <svg id="spinner" class="hidden spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-opacity=".3"/><path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3"/></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- Progress -->
+      <section id="progress" class="hidden mt-6 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <h2 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 dot"></span> Live progress
+        </h2>
+        <ul id="log" class="space-y-1.5 text-sm text-slate-600 font-mono max-h-56 overflow-auto"></ul>
+      </section>
+
+      <!-- Error -->
+      <div id="error" class="hidden mt-6 bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm"></div>
+
+      <!-- Results -->
+      <section id="results" class="hidden mt-6 space-y-6"></section>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-200 bg-white/70">
+    <div class="max-w-6xl mx-auto px-4 py-5 text-center text-sm text-slate-500">
+      Made by <span class="font-semibold text-teal-600">Maryam Mumtaz</span>
+      <span class="mx-1.5 text-slate-300">·</span>
+      AI Engineer &amp; Founder, Marsa Empower
+    </div>
+  </footer>
+
+  <!-- Success popup -->
+  <div id="modal" class="hidden fixed inset-0 z-40 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+    <div class="pop bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
+      <div class="mx-auto w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center">
+        <svg class="w-8 h-8 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h3 class="mt-4 text-lg font-bold text-slate-900">Report ready!</h3>
+      <p id="modal-sub" class="mt-1 text-sm text-slate-500">Your competitive intelligence analysis is complete.</p>
+      <div class="mt-5 flex gap-2">
+        <button id="modal-close" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 text-sm font-medium">View results</button>
+        <a id="modal-download" href="#" class="flex-1 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold inline-flex items-center justify-center gap-1.5">
+          ⬇ Download PDF
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const urlsWrap = $("urls");
+    let charts = [];
+    let currentJob = null;
+
+    function urlRow(value = "") {
+      const div = document.createElement("div");
+      div.className = "flex gap-2";
+      div.innerHTML = `
+        <input type="url" value="${value}" placeholder="https://competitor.com"
+          class="url-input flex-1 bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white" />
+        <button class="rm px-3 rounded-xl border border-slate-300 text-slate-400 hover:text-red-500 hover:border-red-300">×</button>`;
+      div.querySelector(".rm").addEventListener("click", () => {
+        if (urlsWrap.children.length > 1) div.remove();
+      });
+      return div;
+    }
+    function seedRows(n) { urlsWrap.innerHTML = ""; for (let i=0;i<n;i++) urlsWrap.appendChild(urlRow()); }
+    seedRows(2);
+
+    $("add").addEventListener("click", () => urlsWrap.appendChild(urlRow()));
+    $("sample").addEventListener("click", () => {
+      $("niche").value = "Project management & team collaboration software";
+      urlsWrap.innerHTML = "";
+      ["https://asana.com","https://trello.com","https://monday.com"].forEach(u => urlsWrap.appendChild(urlRow(u)));
+    });
+
+    function esc(s){ const d=document.createElement("div"); d.textContent=s??""; return d.innerHTML; }
+    function log(stage, msg) {
+      const li = document.createElement("li");
+      li.innerHTML = `<span class="text-teal-600 font-semibold">[${stage}]</span> ${esc(msg)}`;
+      $("log").appendChild(li);
+      $("log").scrollTop = $("log").scrollHeight;
+    }
+
+    const PALETTE = ["#0d9488","#6366f1","#f59e0b","#ec4899","#0ea5e9","#84cc16"];
+    const sentimentBadge = (s) => ({
+      positive:"text-emerald-700 bg-emerald-50 border-emerald-200",
+      mixed:"text-yellow-700 bg-yellow-50 border-yellow-200",
+      negative:"text-red-700 bg-red-50 border-red-200",
+    }[(s||"unknown").toLowerCase()] || "text-slate-600 bg-slate-50 border-slate-200");
+
+    function swotBlock(title, items, cls) {
+      const li = (items||[]).map(x => `<li class="flex gap-1.5"><span>•</span><span>${esc(x)}</span></li>`).join("")
+        || `<li class="text-slate-400">—</li>`;
+      return `<div class="rounded-lg border ${cls} p-2.5">
+        <p class="text-xs font-semibold mb-1">${title}</p>
+        <ul class="space-y-0.5 text-xs">${li}</ul></div>`;
+    }
+
+    // ---- Key highlight cards (auto-derived from the data) ----
+    function highlights(comps, d) {
+      if (!comps.length) return "";
+      const byFeat = [...comps].sort((a,b)=>(b.feature_score||0)-(a.feature_score||0));
+      const byPrice = [...comps].sort((a,b)=>(b.price_score||0)-(a.price_score||0));
+      const avgFeat = Math.round(comps.reduce((s,c)=>s+(+c.feature_score||0),0)/comps.length);
+      const featLeader = byFeat[0], valueLeader = byPrice[0];
+      const posCount = comps.filter(c=>(c.sentiment||"").toLowerCase()==="positive").length;
+
+      const card = (label,value,sub,accent) => `
+        <div class="rise bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+          <p class="text-xs font-medium text-slate-400 uppercase tracking-wide">${label}</p>
+          <p class="mt-1 text-xl font-bold ${accent}">${esc(value)}</p>
+          <p class="text-xs text-slate-500 mt-0.5">${esc(sub)}</p>
+        </div>`;
+      return `<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        ${card("Competitors", String(comps.length), "analyzed in this niche", "text-slate-900")}
+        ${card("Feature leader", featLeader.name, `${featLeader.feature_score||0}/100 richness`, "text-indigo-600")}
+        ${card("Best value", valueLeader.name, `${valueLeader.price_score||0}/100 price score`, "text-teal-600")}
+        ${card("Avg features", avgFeat+"/100", `${posCount}/${comps.length} positive sentiment`, "text-emerald-600")}
+      </div>`;
+    }
+
+    function render(job_id, d) {
+      charts.forEach(c => c.destroy()); charts = [];
+      currentJob = job_id;
+      const comps = d.competitors || [];
+
+      const cards = comps.map(c => `
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <h3 class="text-lg font-bold text-slate-900">${esc(c.name)}</h3>
+            <span class="px-2 py-0.5 rounded-md border text-xs font-semibold ${sentimentBadge(c.sentiment)}">${esc(c.sentiment||"unknown")}</span>
+          </div>
+          <p class="text-sm text-slate-500 mt-0.5">${esc(c.positioning)}</p>
+          <div class="grid grid-cols-2 gap-2 mt-3">
+            ${swotBlock("Strengths", c.swot?.strengths, "border-emerald-200 bg-emerald-50/50 text-emerald-800")}
+            ${swotBlock("Weaknesses", c.swot?.weaknesses, "border-red-200 bg-red-50/50 text-red-800")}
+            ${swotBlock("Opportunities", c.swot?.opportunities, "border-blue-200 bg-blue-50/50 text-blue-800")}
+            ${swotBlock("Threats", c.swot?.threats, "border-orange-200 bg-orange-50/50 text-orange-800")}
+          </div>
+          <p class="mt-3 text-sm text-slate-600"><span class="font-medium text-slate-700">Pricing:</span> ${esc(c.pricing||"Unknown")}</p>
+        </div>`).join("");
+
+      const fm = d.feature_matrix || {features:[], rows:[]};
+      const head = `<tr><th class="text-left py-2 px-3 font-semibold text-slate-600">Competitor</th>${
+        (fm.features||[]).map(f => `<th class="py-2 px-3 font-semibold text-slate-600 text-center">${esc(f)}</th>`).join("")}</tr>`;
+      const bodyr = (fm.rows||[]).map(r => `<tr class="border-t border-slate-100">
+        <td class="py-2 px-3 font-medium text-slate-700">${esc(r.name)}</td>${
+        (r.has||[]).map(v => `<td class="py-2 px-3 text-center">${v ? '<span class="text-emerald-600">✓</span>' : '<span class="text-slate-300">—</span>'}</td>`).join("")}</tr>`).join("");
+      const matrix = (fm.features||[]).length ? `
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm overflow-x-auto">
+          <h3 class="font-semibold text-slate-800 mb-3">📋 Feature Comparison Matrix</h3>
+          <table class="w-full text-sm"><thead>${head}</thead><tbody>${bodyr}</tbody></table>
+        </div>` : "";
+
+      const gaps = (d.gaps||[]).map(g => `<li class="flex gap-2"><span class="text-teal-500">▸</span><span>${esc(g)}</span></li>`).join("");
+      const recs = (d.recommendations||[]).map(r => `<li class="flex gap-2"><span class="text-emerald-500">✓</span><span>${esc(r)}</span></li>`).join("");
+
+      $("results").innerHTML = `
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+          <h2 class="text-xl font-bold text-slate-900">Analysis Results</h2>
+          <a href="/report/${job_id}.pdf" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow-sm inline-flex items-center gap-1.5">
+            ⬇ Download PDF report</a>
+        </div>
+        ${highlights(comps, d)}
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+          <h3 class="font-semibold text-slate-800 mb-1.5">Market Overview</h3>
+          <p class="text-slate-600">${esc(d.overview)}</p>
+        </div>
+        <div class="grid lg:grid-cols-2 gap-6">
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="font-semibold text-slate-800 mb-1">💲 Price vs Feature Positioning</h3>
+            <p class="text-xs text-slate-400 mb-3">Higher-right = feature-rich &amp; competitively priced (the sweet spot).</p>
+            <canvas id="scatterChart" height="240"></canvas>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="font-semibold text-slate-800 mb-1">📊 Score Comparison</h3>
+            <p class="text-xs text-slate-400 mb-3">Side-by-side price competitiveness and feature richness.</p>
+            <canvas id="barChart" height="240"></canvas>
+          </div>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+          <h3 class="font-semibold text-slate-800 mb-1">🧭 Multi-Factor Radar</h3>
+          <p class="text-xs text-slate-400 mb-3">Feature richness across all competitors at a glance.</p>
+          <canvas id="radarChart" height="150"></canvas>
+        </div>
+        <div class="grid lg:grid-cols-2 gap-6">${cards}</div>
+        ${matrix}
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="font-semibold text-slate-800 mb-3">🎯 Feature Gaps &amp; Opportunities</h3>
+            <ul class="space-y-1.5 text-sm text-slate-600">${gaps || '<li class="text-slate-400">None identified.</li>'}</ul>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="font-semibold text-slate-800 mb-3">💡 Strategic Recommendations</h3>
+            <ul class="space-y-1.5 text-sm text-slate-600">${recs || '<li class="text-slate-400">None.</li>'}</ul>
+          </div>
+        </div>`;
+      $("results").classList.remove("hidden");
+
+      buildCharts(comps);
+      showModal(job_id, comps.length);
+    }
+
+    function buildCharts(comps) {
+      const labels = comps.map(c => c.name);
+      const priceScores = comps.map(c => Number(c.price_score)||0);
+      const featScores = comps.map(c => Number(c.feature_score)||0);
+      const gridColor = "rgba(148,163,184,0.15)";
+      const baseOpts = {
+        responsive:true, maintainAspectRatio:true,
+        plugins:{ legend:{ position:"bottom", labels:{ usePointStyle:true, padding:16, font:{size:12} } },
+                  tooltip:{ padding:10, cornerRadius:8 } },
+      };
+
+      // Bubble/scatter: price (x) vs features (y)
+      charts.push(new Chart($("scatterChart"), {
+        type: "scatter",
+        data: { datasets: comps.map((c,i)=>({
+          label: c.name,
+          data: [{x: priceScores[i], y: featScores[i]}],
+          backgroundColor: PALETTE[i%PALETTE.length],
+          pointRadius: 9, pointHoverRadius: 12,
+        }))},
+        options: { ...baseOpts,
+          scales:{
+            x:{ title:{display:true,text:"Price competitiveness →"}, min:0, max:100, grid:{color:gridColor} },
+            y:{ title:{display:true,text:"Feature richness →"}, min:0, max:100, grid:{color:gridColor} },
+          },
+          plugins:{ ...baseOpts.plugins,
+            tooltip:{ callbacks:{ label:(ctx)=>`${ctx.dataset.label}: price ${ctx.parsed.x}, features ${ctx.parsed.y}` } } },
+        },
+      }));
+
+      // Grouped bar
+      charts.push(new Chart($("barChart"), {
+        type: "bar",
+        data: { labels, datasets: [
+          { label:"Price competitiveness", data:priceScores, backgroundColor:"#0d9488", borderRadius:6, maxBarThickness:34 },
+          { label:"Feature richness", data:featScores, backgroundColor:"#6366f1", borderRadius:6, maxBarThickness:34 },
+        ]},
+        options: { ...baseOpts, scales:{ y:{ beginAtZero:true, max:100, grid:{color:gridColor} }, x:{ grid:{display:false} } } },
+      }));
+
+      // Radar
+      charts.push(new Chart($("radarChart"), {
+        type: "radar",
+        data: { labels, datasets: [
+          { label:"Feature score", data:featScores,
+            backgroundColor:"rgba(13,148,136,0.18)", borderColor:"#0d9488",
+            pointBackgroundColor:"#0d9488", borderWidth:2 },
+          { label:"Price score", data:priceScores,
+            backgroundColor:"rgba(99,102,241,0.15)", borderColor:"#6366f1",
+            pointBackgroundColor:"#6366f1", borderWidth:2 },
+        ]},
+        options: { ...baseOpts, scales:{ r:{ beginAtZero:true, max:100, grid:{color:gridColor}, pointLabels:{font:{size:12}} } } },
+      }));
+    }
+
+    // ---- Success popup ----
+    function showModal(job_id, n) {
+      $("modal-sub").textContent = `Analyzed ${n} competitor${n===1?"":"s"}. Your report is ready to view or download.`;
+      $("modal-download").href = `/report/${job_id}.pdf`;
+      $("modal").classList.remove("hidden");
+    }
+    function hideModal(){ $("modal").classList.add("hidden"); }
+    $("modal-close").addEventListener("click", () => { hideModal(); $("results").scrollIntoView({behavior:"smooth"}); });
+    $("modal").addEventListener("click", (e) => { if (e.target === $("modal")) hideModal(); });
+    $("modal-download").addEventListener("click", hideModal);
+
+    function start() {
+      const niche = $("niche").value.trim();
+      const urls = [...document.querySelectorAll(".url-input")].map(i => i.value.trim()).filter(Boolean);
+      if (!niche) { $("niche").focus(); return; }
+      if (!urls.length) { $("error").textContent = "Add at least one competitor URL."; $("error").classList.remove("hidden"); return; }
+
+      $("run").disabled = true;
+      $("run-label").textContent = "Analyzing";
+      $("spinner").classList.remove("hidden");
+      $("error").classList.add("hidden");
+      $("results").classList.add("hidden");
+      $("log").innerHTML = "";
+      $("progress").classList.remove("hidden");
+
+      const proto = location.protocol === "https:" ? "wss" : "ws";
+      const ws = new WebSocket(`${proto}://${location.host}/ws/analyze`);
+      ws.onopen = () => ws.send(JSON.stringify({ niche, urls }));
+      ws.onmessage = (ev) => {
+        const m = JSON.parse(ev.data);
+        if (m.type === "progress") log(m.stage, m.message);
+        else if (m.type === "result") render(m.job_id, m.data);
+        else if (m.type === "error") { $("error").textContent = "Error: " + m.message; $("error").classList.remove("hidden"); }
+      };
+      const done = () => { $("run").disabled = false; $("run-label").textContent = "Analyze competitors"; $("spinner").classList.add("hidden"); };
+      ws.onclose = done;
+      ws.onerror = () => { $("error").textContent = "Connection error. Is the server running?"; $("error").classList.remove("hidden"); done(); };
+    }
+
+    $("run").addEventListener("click", start);
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") hideModal(); });
+  </script>
+</body>
+</html>
