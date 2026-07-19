@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Trading Signal Agent · Day 06</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@0.2.1/dist/chartjs-chart-financial.min.js"></script>
+  <style>
+    @keyframes pulse-dot { 0%,100%{opacity:.35} 50%{opacity:1} }
+    .dot { animation: pulse-dot 1.2s ease-in-out infinite; }
+    body { background: linear-gradient(180deg,#0f172a 0%,#0b1120 100%); }
+    .spin { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg) } }
+    @keyframes pop { 0%{transform:scale(.9);opacity:0} 100%{transform:scale(1);opacity:1} }
+    .pop { animation: pop .22s ease-out; }
+    @keyframes rise { 0%{transform:translateY(12px);opacity:0} 100%{transform:translateY(0);opacity:1} }
+    .rise { animation: rise .4s ease-out both; }
+  </style>
+</head>
+<body class="h-full min-h-screen text-slate-200 antialiased flex flex-col">
+
+  <!-- Navbar -->
+  <nav class="sticky top-0 z-20 backdrop-blur bg-slate-900/80 border-b border-slate-800">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center text-white font-bold shadow-sm">📈</div>
+        <div class="leading-tight">
+          <p class="font-semibold text-white text-sm">AI Trading Signal Agent</p>
+          <p class="text-xs text-cyan-400 font-medium">This is Day #6 of our 30 Days AI Agent Challenge</p>
+        </div>
+      </div>
+      <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-semibold">
+        <span class="w-2 h-2 rounded-full bg-cyan-400 dot"></span> Day 06 / 30
+      </span>
+    </div>
+  </nav>
+
+  <main class="flex-1">
+    <div class="max-w-6xl mx-auto px-4 py-8">
+
+      <!-- Hero -->
+      <header class="text-center mb-6">
+        <h1 class="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-cyan-400 to-teal-300 bg-clip-text text-transparent">
+          AI Trading Signal &amp; Portfolio Analyzer
+        </h1>
+        <p class="mt-3 text-slate-400 max-w-2xl mx-auto">
+          Enter stock tickers or crypto pairs. The agent pulls real market data, computes RSI, MACD,
+          EMA &amp; Bollinger Bands, and generates BUY / SELL / HOLD signals with confidence and rationale.
+        </p>
+        <div class="mt-4 flex flex-wrap justify-center gap-2 text-xs">
+          <span class="px-2.5 py-1 rounded-full bg-slate-800/70 border border-slate-700 text-slate-300">🕯️ Candlestick charts</span>
+          <span class="px-2.5 py-1 rounded-full bg-slate-800/70 border border-slate-700 text-slate-300">📊 RSI · MACD · BB</span>
+          <span class="px-2.5 py-1 rounded-full bg-slate-800/70 border border-slate-700 text-slate-300">🎯 BUY/SELL/HOLD</span>
+          <span class="px-2.5 py-1 rounded-full bg-slate-800/70 border border-slate-700 text-slate-300">💼 Portfolio risk</span>
+        </div>
+      </header>
+
+      <!-- Input card -->
+      <section class="bg-slate-800/60 border border-slate-700 rounded-2xl p-5 shadow-sm backdrop-blur">
+        <label class="block text-sm font-medium text-slate-300 mb-1.5">Tickers / crypto pairs</label>
+        <div id="symbols" class="space-y-2"></div>
+        <div class="flex items-center justify-between mt-3 flex-wrap gap-3">
+          <div class="flex items-center gap-2">
+            <button id="add" class="text-sm text-cyan-400 font-medium hover:text-cyan-300">+ Add symbol</button>
+            <button id="sample" class="text-sm text-slate-400 font-medium hover:text-slate-200">Load example</button>
+          </div>
+          <div class="flex items-center gap-2">
+            <select id="period" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+              <option value="3mo">3 months</option>
+              <option value="6mo">6 months</option>
+              <option value="1y" selected>1 year</option>
+              <option value="2y">2 years</option>
+              <option value="5y">5 years</option>
+            </select>
+            <button id="run" class="px-6 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-semibold shadow-sm inline-flex items-center gap-2">
+              <span id="run-label">Generate signals</span>
+              <svg id="spinner" class="hidden spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-opacity=".3"/><path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3"/></svg>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Progress -->
+      <section id="progress" class="hidden mt-6 bg-slate-800/60 border border-slate-700 rounded-2xl p-5 shadow-sm backdrop-blur">
+        <h2 class="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-teal-400 dot"></span> Live progress
+        </h2>
+        <ul id="log" class="space-y-1.5 text-sm text-slate-400 font-mono max-h-56 overflow-auto"></ul>
+      </section>
+
+      <!-- Error -->
+      <div id="error" class="hidden mt-6 bg-red-500/10 border border-red-500/30 text-red-300 rounded-xl p-4 text-sm"></div>
+
+      <!-- Results -->
+      <section id="results" class="hidden mt-6 space-y-6"></section>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800">
+    <div class="max-w-6xl mx-auto px-4 py-5 text-center text-sm text-slate-500">
+      Made by <span class="font-semibold text-cyan-400">Maryam Mumtaz</span>
+      <span class="mx-1.5 text-slate-700">·</span>
+      AI Engineer &amp; Founder, Marsa Empower
+      <p class="mt-1 text-xs text-slate-600">Not financial advice — for educational purposes only.</p>
+    </div>
+  </footer>
+
+  <!-- Success popup -->
+  <div id="modal" class="hidden fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div class="pop bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
+      <div class="mx-auto w-14 h-14 rounded-full bg-cyan-500/20 flex items-center justify-center">
+        <svg class="w-8 h-8 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h3 class="mt-4 text-lg font-bold text-white">Signals ready!</h3>
+      <p id="modal-sub" class="mt-1 text-sm text-slate-400">Your trading analysis is complete.</p>
+      <div class="mt-5 flex gap-2">
+        <button id="modal-close" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-600 text-slate-300 hover:bg-slate-700 text-sm font-medium">View signals</button>
+        <a id="modal-download" href="#" class="flex-1 px-4 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-semibold inline-flex items-center justify-center gap-1.5">
+          ⬇ Download PDF
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const symWrap = $("symbols");
+    let charts = [];
+    let currentJob = null;
+
+    function esc(s){ const d=document.createElement("div"); d.textContent=s??""; return d.innerHTML; }
+    function log(stage, msg) {
+      const li = document.createElement("li");
+      li.innerHTML = `<span class="text-cyan-400 font-semibold">[${stage}]</span> ${esc(msg)}`;
+      $("log").appendChild(li);
+      $("log").scrollTop = $("log").scrollHeight;
+    }
+
+    function symRow(value = "") {
+      const div = document.createElement("div");
+      div.className = "flex gap-2";
+      div.innerHTML = `
+        <input type="text" value="${value}" placeholder="AAPL, TSLA, BTC-USD, ETH-USD..."
+          class="sym-input flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-200 uppercase focus:outline-none focus:ring-2 focus:ring-cyan-500" />
+        <button class="rm px-3 rounded-xl border border-slate-700 text-slate-500 hover:text-red-400 hover:border-red-500/50">×</button>`;
+      div.querySelector(".rm").addEventListener("click", () => { if (symWrap.children.length > 1) div.remove(); });
+      return div;
+    }
+    function seedRows(n) { symWrap.innerHTML = ""; for (let i=0;i<n;i++) symWrap.appendChild(symRow()); }
+    seedRows(2);
+
+    $("add").addEventListener("click", () => symWrap.appendChild(symRow()));
+    $("sample").addEventListener("click", () => {
+      symWrap.innerHTML = "";
+      ["AAPL","NVDA","BTC-USD"].forEach(s => symWrap.appendChild(symRow(s)));
+    });
+
+    const SIG = {
+      BUY:  { text:"text-emerald-300", bg:"bg-emerald-500/10 border-emerald-500/30", bar:"#10b981", up:"#10b981", down:"#ef4444" },
+      SELL: { text:"text-red-300", bg:"bg-red-500/10 border-red-500/30", bar:"#ef4444" },
+      HOLD: { text:"text-amber-300", bg:"bg-amber-500/10 border-amber-500/30", bar:"#f59e0b" },
+    };
+    const sigUI = (s) => SIG[(s||"HOLD").toUpperCase()] || SIG.HOLD;
+    const pct = (v) => v==null ? "—" : (v>=0?"+":"")+v+"%";
+    const pctCls = (v) => v==null ? "text-slate-400" : v>=0 ? "text-emerald-400" : "text-red-400";
+
+    function assetCard(a, i) {
+      const s = a.signal, ind = a.indicators, u = sigUI(s.signal);
+      const macd = ind.macd || {}, boll = ind.bollinger || {};
+      const bull = (s.bull_case||[]).map(x=>`<li class="flex gap-1.5"><span class="text-emerald-400">▲</span><span>${esc(x)}</span></li>`).join("") || '<li class="text-slate-500">—</li>';
+      const bear = (s.bear_case||[]).map(x=>`<li class="flex gap-1.5"><span class="text-red-400">▼</span><span>${esc(x)}</span></li>`).join("") || '<li class="text-slate-500">—</li>';
+      const mm = (label,val) => `<div class="bg-slate-900/60 rounded-lg px-2.5 py-1.5"><p class="text-[10px] uppercase tracking-wide text-slate-500">${label}</p><p class="text-sm font-semibold text-slate-200">${val}</p></div>`;
+      return `<div class="rise bg-slate-800/60 border border-slate-700 rounded-2xl p-5 shadow-sm backdrop-blur">
+        <div class="flex items-start justify-between gap-3 flex-wrap">
+          <div>
+            <h3 class="text-lg font-bold text-white">${esc(a.symbol)}</h3>
+            <p class="text-xs text-slate-400">${esc(a.name||"")}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-2xl font-bold text-white">${ind.price} <span class="text-xs text-slate-500">${esc(a.currency||"")}</span></p>
+            <p class="text-xs ${pctCls(ind.change_1d_pct)}">${pct(ind.change_1d_pct)} today · <span class="${pctCls(ind.change_30d_pct)}">${pct(ind.change_30d_pct)} 30d</span></p>
+          </div>
+        </div>
+        <div class="mt-3 flex items-center gap-3 flex-wrap">
+          <span class="px-3 py-1 rounded-lg border text-sm font-bold ${u.bg} ${u.text}">${s.signal}</span>
+          <div class="flex-1 min-w-[140px]">
+            <div class="flex justify-between text-[10px] text-slate-500 mb-0.5"><span>confidence</span><span>${s.confidence}%</span></div>
+            <div class="h-1.5 rounded-full bg-slate-700 overflow-hidden"><div class="h-full rounded-full" style="width:${s.confidence}%;background:${u.bar}"></div></div>
+          </div>
+          <span class="text-xs text-slate-400">${esc(s.time_horizon||"")} · ${esc(s.risk_level||"")} risk</span>
+        </div>
+        <div class="mt-3 grid grid-cols-3 sm:grid-cols-5 gap-2">
+          ${mm("RSI", ind.rsi ?? "—")}
+          ${mm("MACD h", macd.histogram ?? "—")}
+          ${mm("EMA50", ind.ema50 ?? "—")}
+          ${mm("EMA200", ind.ema200 ?? "—")}
+          ${mm("BB %b", boll.percent_b ?? "—")}
+        </div>
+        <div class="mt-4 bg-slate-900/50 rounded-xl p-3">
+          <canvas id="chart-${i}" height="180"></canvas>
+        </div>
+        <p class="mt-3 text-sm text-slate-300">${esc(s.rationale||"")}</p>
+        <div class="mt-3 grid sm:grid-cols-2 gap-3 text-xs">
+          <div class="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-2.5"><p class="font-semibold text-emerald-300 mb-1">Bull case</p><ul class="space-y-0.5 text-slate-300">${bull}</ul></div>
+          <div class="rounded-lg border border-red-500/20 bg-red-500/5 p-2.5"><p class="font-semibold text-red-300 mb-1">Bear case</p><ul class="space-y-0.5 text-slate-300">${bear}</ul></div>
+        </div>
+      </div>`;
+    }
+
+    function portfolioCard(p) {
+      if (!p) return "";
+      const rs = p.risk_score||0;
+      const color = rs>=66 ? "#ef4444" : rs>=33 ? "#f59e0b" : "#10b981";
+      const recs = (p.recommendations||[]).map(r=>`<li class="flex gap-2"><span class="text-cyan-400">▸</span><span>${esc(r)}</span></li>`).join("");
+      return `<div class="bg-slate-800/60 border border-slate-700 rounded-2xl p-5 shadow-sm backdrop-blur">
+        <h3 class="text-lg font-bold text-white mb-1">💼 Portfolio Assessment</h3>
+        <div class="flex items-center gap-3 mb-3">
+          <div class="flex-1"><div class="flex justify-between text-xs text-slate-400 mb-1"><span>Risk score</span><span>${rs}/100 · ${esc(p.risk_level||"")}</span></div>
+            <div class="h-2 rounded-full bg-slate-700 overflow-hidden"><div class="h-full rounded-full" style="width:${rs}%;background:${color}"></div></div></div>
+        </div>
+        <p class="text-sm text-slate-300">${esc(p.summary||"")}</p>
+        ${p.diversification ? `<p class="mt-2 text-sm text-slate-400"><span class="font-medium text-slate-300">Diversification:</span> ${esc(p.diversification)}</p>` : ""}
+        ${recs ? `<ul class="mt-3 space-y-1 text-sm text-slate-300">${recs}</ul>` : ""}
+      </div>`;
+    }
+
+    function render(job_id, d) {
+      charts.forEach(c => c.destroy()); charts = [];
+      currentJob = job_id;
+      const assets = d.assets || [];
+      const counts = { BUY:0, SELL:0, HOLD:0 };
+      assets.forEach(a => counts[a.signal.signal]++);
+
+      const errs = (d.errors||[]).map(e=>`<span class="px-2 py-0.5 rounded bg-red-500/10 border border-red-500/30 text-red-300 text-xs">${esc(e.symbol)}: ${esc(e.error)}</span>`).join(" ");
+
+      $("results").innerHTML = `
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+          <div class="flex items-center gap-2 text-sm">
+            <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 font-semibold">${counts.BUY} BUY</span>
+            <span class="px-2.5 py-1 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 font-semibold">${counts.SELL} SELL</span>
+            <span class="px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 font-semibold">${counts.HOLD} HOLD</span>
+          </div>
+          <a href="/report/${job_id}.pdf" class="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-semibold shadow-sm inline-flex items-center gap-1.5">⬇ Download PDF report</a>
+        </div>
+        ${errs ? `<div class="flex flex-wrap gap-2">${errs}</div>` : ""}
+        ${portfolioCard(d.portfolio)}
+        <div class="grid lg:grid-cols-2 gap-6">${assets.map(assetCard).join("")}</div>`;
+      $("results").classList.remove("hidden");
+
+      assets.forEach((a, i) => buildChart(a, i));
+      showModal(job_id, counts);
+    }
+
+    function buildChart(a, i) {
+      const candles = (a.candles||[]).slice(-90);
+      const ctx = $("chart-"+i);
+      if (!ctx) return;
+      const u = sigUI(a.signal.signal);
+      const data = candles.map(c => ({ x: luxon.DateTime.fromISO(c.time).toMillis(), o:c.open, h:c.high, l:c.low, c:c.close }));
+      charts.push(new Chart(ctx, {
+        type: "candlestick",
+        data: { datasets: [{
+          label: a.symbol, data,
+          color: { up:"#10b981", down:"#ef4444", unchanged:"#94a3b8" },
+          borderColor: { up:"#10b981", down:"#ef4444", unchanged:"#94a3b8" },
+        }]},
+        options: {
+          responsive:true, maintainAspectRatio:true,
+          plugins:{ legend:{display:false}, tooltip:{ mode:"index", intersect:false } },
+          scales:{
+            x:{ type:"time", time:{ unit:"month" }, ticks:{ color:"#64748b", maxRotation:0, font:{size:10} }, grid:{ color:"rgba(148,163,184,0.08)" } },
+            y:{ ticks:{ color:"#64748b", font:{size:10} }, grid:{ color:"rgba(148,163,184,0.08)" } },
+          },
+        },
+      }));
+    }
+
+    function showModal(job_id, counts) {
+      $("modal-sub").textContent = `${counts.BUY} BUY · ${counts.SELL} SELL · ${counts.HOLD} HOLD signals generated.`;
+      $("modal-download").href = `/report/${job_id}.pdf`;
+      $("modal").classList.remove("hidden");
+    }
+    function hideModal(){ $("modal").classList.add("hidden"); }
+    $("modal-close").addEventListener("click", () => { hideModal(); $("results").scrollIntoView({behavior:"smooth"}); });
+    $("modal").addEventListener("click", (e) => { if (e.target === $("modal")) hideModal(); });
+    $("modal-download").addEventListener("click", hideModal);
+
+    function start() {
+      const symbols = [...document.querySelectorAll(".sym-input")].map(i => i.value.trim()).filter(Boolean);
+      if (!symbols.length) { $("error").textContent = "Enter at least one ticker."; $("error").classList.remove("hidden"); return; }
+
+      $("run").disabled = true;
+      $("run-label").textContent = "Analyzing";
+      $("spinner").classList.remove("hidden");
+      $("error").classList.add("hidden");
+      $("results").classList.add("hidden");
+      $("log").innerHTML = "";
+      $("progress").classList.remove("hidden");
+
+      const proto = location.protocol === "https:" ? "wss" : "ws";
+      const ws = new WebSocket(`${proto}://${location.host}/ws/analyze`);
+      ws.onopen = () => ws.send(JSON.stringify({ symbols, period: $("period").value }));
+      ws.onmessage = (ev) => {
+        const m = JSON.parse(ev.data);
+        if (m.type === "progress") log(m.stage, m.message);
+        else if (m.type === "result") render(m.job_id, m.data);
+        else if (m.type === "error") { $("error").textContent = "Error: " + m.message; $("error").classList.remove("hidden"); }
+      };
+      const done = () => { $("run").disabled = false; $("run-label").textContent = "Generate signals"; $("spinner").classList.add("hidden"); };
+      ws.onclose = done;
+      ws.onerror = () => { $("error").textContent = "Connection error. Is the server running?"; $("error").classList.remove("hidden"); done(); };
+    }
+
+    $("run").addEventListener("click", start);
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") hideModal(); });
+  </script>
+</body>
+</html>

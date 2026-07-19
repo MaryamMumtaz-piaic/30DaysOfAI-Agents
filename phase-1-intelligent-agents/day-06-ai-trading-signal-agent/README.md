@@ -11,15 +11,18 @@ An intelligent financial agent that analyzes real-time stock/crypto data, calcul
 
 ## ✨ Key Features
 
-- Real-time market data via Yahoo Finance and CoinGecko API
-- Technical indicator calculations (RSI, MACD, EMA, Bollinger Bands)
-- Financial news sentiment analysis
-- BUY/SELL/HOLD signal generation with rationale
-- Portfolio risk assessment and diversification advice
+- Real market data (stocks & crypto) via Yahoo Finance (`yfinance`)
+- Technical indicator calculations (RSI, MACD, EMA 20/50/200, Bollinger Bands)
+- BUY / SELL / HOLD signals with confidence score, bull/bear case, and rationale
+- Portfolio-level risk assessment and diversification advice (multi-symbol)
+- Interactive candlestick charts with live WebSocket progress
+- Downloadable PDF signals report
 
 ## 🛠️ Tech Stack
 
-Python · OpenAI SDK · yfinance · FastAPI · HTML · Tailwind CSS · TradingView Lightweight Charts · JavaScript
+Python · OpenAI GPT-4o-mini · yfinance · FastAPI · WebSockets · ReportLab · HTML · Tailwind CSS · Chart.js (financial plugin) · JavaScript
+
+> Enter tickers like `AAPL`, `NVDA` or crypto pairs like `BTC-USD`, `ETH-USD`. Add multiple symbols to trigger the portfolio assessment.
 
 ## ⚙️ Setup
 
@@ -34,7 +37,7 @@ uvicorn main:app --reload
 
 ## 📌 Status
 
-🚧 In development
+✅ Complete
 
 ---
 
