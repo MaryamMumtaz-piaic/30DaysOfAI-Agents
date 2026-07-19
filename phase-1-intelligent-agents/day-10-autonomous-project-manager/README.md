@@ -11,15 +11,19 @@ Describe your project goal in one sentence. The agent autonomously breaks it int
 
 ## ✨ Key Features
 
-- Autonomous task decomposition from a single goal input
-- Effort estimation with ML-based story points
-- Risk and blocker identification with mitigation strategies
-- Auto-generated interactive Gantt chart
-- Drag-and-drop Kanban board with sprint management
+- Autonomous task decomposition from a single-sentence goal
+- Effort estimation (Fibonacci story points + day estimates) and role assignment
+- Dependency mapping with critical-path highlighting
+- Auto-generated Gantt timeline and effort-by-phase chart
+- Drag-and-drop Kanban board (To Do / In Progress / Done)
+- Risk assessment with likelihood, impact, and mitigations
+- Downloadable PDF project plan
 
 ## 🛠️ Tech Stack
 
-Python · OpenAI SDK · LangChain · FastAPI · HTML · Tailwind CSS · JavaScript · Frappe Gantt · SortableJS
+Python · OpenAI GPT-4o-mini · FastAPI · WebSockets · ReportLab · HTML · Tailwind CSS · Chart.js · native drag-and-drop · JavaScript
+
+> Configure team size and an optional deadline; the agent schedules task start-offsets so work parallelizes across the team.
 
 ## ⚙️ Setup
 
@@ -34,7 +38,7 @@ uvicorn main:app --reload
 
 ## 📌 Status
 
-🚧 In development
+✅ Complete
 
 ---
 

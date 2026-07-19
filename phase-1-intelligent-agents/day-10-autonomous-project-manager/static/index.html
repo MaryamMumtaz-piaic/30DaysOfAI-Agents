@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Autonomous Project Manager · Day 10</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    @keyframes pulse-dot { 0%,100%{opacity:.35} 50%{opacity:1} }
+    .dot { animation: pulse-dot 1.2s ease-in-out infinite; }
+    body { background: linear-gradient(180deg,#eef2ff 0%,#f8fafc 40%,#ffffff 100%); }
+    .spin { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg) } }
+    @keyframes pop { 0%{transform:scale(.9);opacity:0} 100%{transform:scale(1);opacity:1} }
+    .pop { animation: pop .22s ease-out; }
+    @keyframes rise { 0%{transform:translateY(12px);opacity:0} 100%{transform:translateY(0);opacity:1} }
+    .rise { animation: rise .4s ease-out both; }
+    .kan-card.dragging { opacity:.4; }
+    .kan-col.drag-over { background:#eef2ff; outline:2px dashed #a5b4fc; }
+  </style>
+</head>
+<body class="h-full min-h-screen text-slate-800 antialiased flex flex-col">
+
+  <!-- Navbar -->
+  <nav class="sticky top-0 z-20 backdrop-blur bg-white/80 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-white font-bold shadow-sm">🗂️</div>
+        <div class="leading-tight">
+          <p class="font-semibold text-slate-900 text-sm">Autonomous Project Manager</p>
+          <p class="text-xs text-indigo-600 font-medium">This is Day #10 of our 30 Days AI Agent Challenge</p>
+        </div>
+      </div>
+      <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold">
+        <span class="w-2 h-2 rounded-full bg-indigo-500 dot"></span> Day 10 / 30
+      </span>
+    </div>
+  </nav>
+
+  <main class="flex-1">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+
+      <!-- Hero -->
+      <header class="text-center mb-6">
+        <h1 class="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
+          Autonomous AI Project Manager
+        </h1>
+        <p class="mt-3 text-slate-500 max-w-2xl mx-auto">
+          Describe your project in one sentence. The agent breaks it into phases and tasks, estimates
+          effort, maps dependencies, builds a Gantt timeline, and assesses risks — plus a drag-and-drop Kanban board.
+        </p>
+        <div class="mt-4 flex flex-wrap justify-center gap-2 text-xs">
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">🧩 Task decomposition</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">📅 Gantt timeline</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">📋 Kanban board</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">⚠️ Risk assessment</span>
+        </div>
+      </header>
+
+      <!-- Input card -->
+      <section class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">Project goal</label>
+        <input id="goal" type="text" autocomplete="off"
+          placeholder="e.g. Launch a mobile app for tracking daily water intake"
+          class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white" />
+        <div class="grid sm:grid-cols-3 gap-4 mt-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Team size</label>
+            <input id="team" type="number" min="1" max="20" value="3" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Deadline (weeks, 0 = auto)</label>
+            <input id="deadline" type="number" min="0" max="104" value="0" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white" />
+          </div>
+          <div class="flex items-end">
+            <button id="sample" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 text-sm font-medium">Load example</button>
+          </div>
+        </div>
+        <div class="flex items-center justify-end mt-4">
+          <button id="run" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-sm inline-flex items-center gap-2">
+            <span id="run-label">Generate plan</span>
+            <svg id="spinner" class="hidden spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-opacity=".3"/><path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3"/></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- Progress -->
+      <section id="progress" class="hidden mt-6 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <h2 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-violet-500 dot"></span> Live progress
+        </h2>
+        <ul id="log" class="space-y-1.5 text-sm text-slate-600 font-mono max-h-56 overflow-auto"></ul>
+      </section>
+
+      <!-- Error -->
+      <div id="error" class="hidden mt-6 bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm"></div>
+
+      <!-- Results -->
+      <section id="results" class="hidden mt-6 space-y-6"></section>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-200 bg-white/70">
+    <div class="max-w-7xl mx-auto px-4 py-5 text-center text-sm text-slate-500">
+      Made by <span class="font-semibold text-indigo-600">Maryam Mumtaz</span>
+      <span class="mx-1.5 text-slate-300">·</span>
+      AI Engineer &amp; Founder, Marsa Empower
+    </div>
+  </footer>
+
+  <!-- Success popup -->
+  <div id="modal" class="hidden fixed inset-0 z-40 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+    <div class="pop bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
+      <div class="mx-auto w-14 h-14 rounded-full bg-indigo-100 flex items-center justify-center">
+        <svg class="w-8 h-8 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h3 class="mt-4 text-lg font-bold text-slate-900">Plan ready!</h3>
+      <p id="modal-sub" class="mt-1 text-sm text-slate-500">Your project plan is complete.</p>
+      <div class="mt-5 flex gap-2">
+        <button id="modal-close" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 text-sm font-medium">View plan</button>
+        <a id="modal-download" href="#" class="flex-1 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold inline-flex items-center justify-center gap-1.5">
+          ⬇ Download PDF
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let plan = null;
+    let currentJob = null;
+
+    function esc(s){ const d=document.createElement("div"); d.textContent=s??""; return d.innerHTML; }
+    function log(stage, msg) {
+      const li = document.createElement("li");
+      li.innerHTML = `<span class="text-indigo-600 font-semibold">[${stage}]</span> ${esc(msg)}`;
+      $("log").appendChild(li);
+      $("log").scrollTop = $("log").scrollHeight;
+    }
+
+    $("sample").addEventListener("click", () => {
+      $("goal").value = "Build and launch a SaaS invoicing tool for freelancers with Stripe payments";
+      $("team").value = 4; $("deadline").value = 10;
+    });
+
+    const PRI = { high:"bg-red-50 text-red-700 border-red-200", medium:"bg-amber-50 text-amber-700 border-amber-200", low:"bg-emerald-50 text-emerald-700 border-emerald-200" };
+    const priCls = (p) => PRI[(p||"medium").toLowerCase()] || PRI.medium;
+    const PHASE_COLORS = ["#6366f1","#8b5cf6","#ec4899","#14b8a6","#f59e0b","#0ea5e9","#84cc16","#ef4444"];
+
+    function render(job_id, d) {
+      plan = d; currentJob = job_id;
+      const s = d.stats || {}, tasks = d.tasks || [];
+      const phaseColor = {};
+      (d.phases||[]).forEach((p,i)=> phaseColor[p.name] = PHASE_COLORS[i % PHASE_COLORS.length]);
+      const cp = new Set(d.critical_path || []);
+
+      // ---- Gantt ----
+      const maxDay = Math.max(1, ...tasks.map(t => (t.start_offset_days||0)+(t.estimate_days||1)));
+      const gantt = tasks.map(t => {
+        const start = t.start_offset_days||0, dur = t.estimate_days||1;
+        const left = (start/maxDay*100), width = Math.max(2, dur/maxDay*100);
+        const col = phaseColor[t.phase] || "#6366f1";
+        return `<div class="flex items-center gap-2 text-xs">
+          <div class="w-40 shrink-0 truncate text-slate-600" title="${esc(t.name)}">${cp.has(t.id)?'<span class="text-amber-500">★</span> ':''}${esc(t.id)} ${esc(t.name)}</div>
+          <div class="flex-1 relative h-6 bg-slate-100 rounded">
+            <div class="absolute h-6 rounded flex items-center px-1.5 text-white text-[10px] font-medium overflow-hidden ${cp.has(t.id)?'ring-2 ring-amber-400':''}"
+                 style="left:${left}%;width:${width}%;background:${col}" title="Day ${start} → ${start+dur} (${dur}d)">${dur}d</div>
+          </div></div>`;
+      }).join("");
+
+      // ---- Kanban ----
+      const cols = [["todo","To Do","bg-slate-100"],["in_progress","In Progress","bg-blue-50"],["done","Done","bg-emerald-50"]];
+      const kanban = cols.map(([key,label,bg]) => `
+        <div class="flex-1 min-w-[240px]">
+          <div class="flex items-center justify-between mb-2 px-1">
+            <h4 class="text-sm font-semibold text-slate-700">${label}</h4>
+            <span class="text-xs text-slate-400" data-count="${key}">0</span>
+          </div>
+          <div class="kan-col ${bg} rounded-xl p-2 min-h-[120px] space-y-2 transition" data-col="${key}"></div>
+        </div>`).join("");
+
+      // ---- Risks ----
+      const risks = (d.risks||[]).map(r => {
+        const sev = (x)=>({high:"text-red-600",medium:"text-amber-600",low:"text-emerald-600"}[(x||"").toLowerCase()]||"text-slate-500");
+        return `<div class="bg-white border border-slate-200 rounded-xl p-4">
+          <p class="text-sm font-medium text-slate-800">${esc(r.risk)}</p>
+          <div class="flex gap-3 mt-1 text-xs">
+            <span>Likelihood: <b class="${sev(r.likelihood)}">${esc(r.likelihood||"—")}</b></span>
+            <span>Impact: <b class="${sev(r.impact)}">${esc(r.impact||"—")}</b></span>
+          </div>
+          <p class="mt-2 text-xs text-slate-500"><span class="font-medium text-emerald-700">Mitigation:</span> ${esc(r.mitigation||"")}</p>
+        </div>`;
+      }).join("");
+
+      const phaseLegend = (d.phases||[]).map(p => `<span class="inline-flex items-center gap-1 text-xs text-slate-500"><span class="w-2.5 h-2.5 rounded-sm" style="background:${phaseColor[p.name]}"></span>${esc(p.name)}</span>`).join("");
+
+      $("results").innerHTML = `
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+          <div><h2 class="text-xl font-bold text-slate-900">${esc(d.title||"Project Plan")}</h2>
+          <p class="text-sm text-slate-500 max-w-2xl">${esc(d.objective||"")}</p></div>
+          <a href="/report/${job_id}.pdf" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-sm inline-flex items-center gap-1.5">⬇ Download plan (PDF)</a>
+        </div>
+        <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          ${statCard("Phases", s.phases||0, "text-indigo-600")}
+          ${statCard("Tasks", s.tasks||0, "text-violet-600")}
+          ${statCard("Story points", s.total_points||0, "text-pink-600")}
+          ${statCard("Duration", "~"+(s.duration_days||0)+"d", "text-teal-600")}
+          ${statCard("Team roles", (d.roles||[]).length, "text-amber-600")}
+        </div>
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+          <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
+            <h3 class="font-semibold text-slate-800">📅 Gantt Timeline</h3>
+            <div class="flex flex-wrap gap-3">${phaseLegend}</div>
+          </div>
+          <div class="space-y-1.5">${gantt || '<p class="text-slate-400 text-sm">No tasks.</p>'}</div>
+        </div>
+        <div class="grid lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-semibold text-slate-800">📋 Kanban Board</h3>
+              <span class="text-xs text-slate-400">drag cards between columns</span>
+            </div>
+            <div class="flex gap-3 overflow-x-auto pb-2">${kanban}</div>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="font-semibold text-slate-800 mb-3">📊 Effort by Phase</h3>
+            <canvas id="phaseChart" height="220"></canvas>
+          </div>
+        </div>
+        ${risks ? `<div>
+          <h3 class="font-semibold text-slate-800 mb-3">⚠️ Risk Assessment</h3>
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">${risks}</div></div>` : ""}
+        <div class="text-xs text-slate-400 text-center">Kanban changes are local to this view and are not saved.</div>`;
+      $("results").classList.remove("hidden");
+
+      renderKanban(tasks, phaseColor, cp);
+      buildPhaseChart(d);
+      showModal(job_id, s);
+    }
+
+    function statCard(label, val, cls) {
+      return `<div class="rise bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+        <p class="text-xs font-medium text-slate-400 uppercase tracking-wide">${label}</p>
+        <p class="mt-1 text-xl font-bold ${cls}">${esc(val)}</p></div>`;
+    }
+
+    function renderKanban(tasks, phaseColor, cp) {
+      tasks.forEach(t => {
+        const col = document.querySelector(`[data-col="${t.status}"]`) || document.querySelector('[data-col="todo"]');
+        col.appendChild(kanCard(t, phaseColor, cp));
+      });
+      updateCounts();
+
+      document.querySelectorAll(".kan-col").forEach(col => {
+        col.addEventListener("dragover", (e) => { e.preventDefault(); col.classList.add("drag-over"); });
+        col.addEventListener("dragleave", () => col.classList.remove("drag-over"));
+        col.addEventListener("drop", (e) => {
+          e.preventDefault(); col.classList.remove("drag-over");
+          const id = e.dataTransfer.getData("text/plain");
+          const card = document.querySelector(`[data-card="${id}"]`);
+          if (card) {
+            col.appendChild(card);
+            const t = plan.tasks.find(x => x.id === id);
+            if (t) t.status = col.dataset.col;
+            updateCounts();
+          }
+        });
+      });
+    }
+
+    function kanCard(t, phaseColor, cp) {
+      const div = document.createElement("div");
+      div.className = "kan-card bg-white border border-slate-200 rounded-lg p-2.5 shadow-sm cursor-grab";
+      div.draggable = true;
+      div.dataset.card = t.id;
+      div.style.borderLeft = `3px solid ${phaseColor[t.phase]||"#6366f1"}`;
+      div.innerHTML = `
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-[10px] font-mono text-slate-400">${cp.has(t.id)?'<span class="text-amber-500">★</span> ':''}${esc(t.id)}</span>
+          <span class="px-1.5 py-0.5 rounded border text-[10px] font-semibold ${priCls(t.priority)}">${esc(t.priority)}</span>
+        </div>
+        <p class="text-sm font-medium text-slate-800 mt-1 leading-snug">${esc(t.name)}</p>
+        <div class="flex items-center justify-between mt-1.5 text-[11px] text-slate-400">
+          <span>${esc(t.role||"")}</span><span>${t.story_points||0} SP · ${t.estimate_days||0}d</span>
+        </div>`;
+      div.addEventListener("dragstart", (e) => { e.dataTransfer.setData("text/plain", t.id); div.classList.add("dragging"); });
+      div.addEventListener("dragend", () => div.classList.remove("dragging"));
+      return div;
+    }
+
+    function updateCounts() {
+      ["todo","in_progress","done"].forEach(k => {
+        const n = document.querySelectorAll(`[data-col="${k}"] .kan-card`).length;
+        const el = document.querySelector(`[data-count="${k}"]`);
+        if (el) el.textContent = n;
+      });
+    }
+
+    let phaseChart = null;
+    function buildPhaseChart(d) {
+      const ctx = $("phaseChart"); if (!ctx) return;
+      if (phaseChart) phaseChart.destroy();
+      const byPhase = {};
+      (d.tasks||[]).forEach(t => { byPhase[t.phase] = (byPhase[t.phase]||0) + (t.story_points||0); });
+      const labels = Object.keys(byPhase);
+      phaseChart = new Chart(ctx, {
+        type:"doughnut",
+        data:{ labels, datasets:[{ data:labels.map(l=>byPhase[l]),
+          backgroundColor: labels.map((_,i)=>PHASE_COLORS[i%PHASE_COLORS.length]), borderWidth:2, borderColor:"#fff" }]},
+        options:{ responsive:true, maintainAspectRatio:true, cutout:"58%",
+          plugins:{ legend:{ position:"bottom", labels:{ usePointStyle:true, padding:12, font:{size:10} } } } },
+      });
+    }
+
+    function showModal(job_id, s) {
+      $("modal-sub").textContent = `${s.tasks||0} tasks across ${s.phases||0} phases · ${s.total_points||0} story points · ~${s.duration_days||0} days.`;
+      $("modal-download").href = `/report/${job_id}.pdf`;
+      $("modal").classList.remove("hidden");
+    }
+    function hideModal(){ $("modal").classList.add("hidden"); }
+    $("modal-close").addEventListener("click", () => { hideModal(); $("results").scrollIntoView({behavior:"smooth"}); });
+    $("modal").addEventListener("click", (e) => { if (e.target === $("modal")) hideModal(); });
+    $("modal-download").addEventListener("click", hideModal);
+
+    function start() {
+      const goal = $("goal").value.trim();
+      if (goal.length < 8) { $("error").textContent = "Describe your project goal in a sentence."; $("error").classList.remove("hidden"); $("goal").focus(); return; }
+
+      $("run").disabled = true;
+      $("run-label").textContent = "Planning";
+      $("spinner").classList.remove("hidden");
+      $("error").classList.add("hidden");
+      $("results").classList.add("hidden");
+      $("log").innerHTML = "";
+      $("progress").classList.remove("hidden");
+
+      const proto = location.protocol === "https:" ? "wss" : "ws";
+      const ws = new WebSocket(`${proto}://${location.host}/ws/plan`);
+      ws.onopen = () => ws.send(JSON.stringify({ goal, team_size: parseInt($("team").value)||3, deadline_weeks: parseInt($("deadline").value)||0 }));
+      ws.onmessage = (ev) => {
+        const m = JSON.parse(ev.data);
+        if (m.type === "progress") log(m.stage, m.message);
+        else if (m.type === "result") render(m.job_id, m.data);
+        else if (m.type === "error") { $("error").textContent = "Error: " + m.message; $("error").classList.remove("hidden"); }
+      };
+      const done = () => { $("run").disabled = false; $("run-label").textContent = "Generate plan"; $("spinner").classList.add("hidden"); };
+      ws.onclose = done;
+      ws.onerror = () => { $("error").textContent = "Connection error. Is the server running?"; $("error").classList.remove("hidden"); done(); };
+    }
+
+    $("run").addEventListener("click", start);
+    $("goal").addEventListener("keydown", (e) => { if (e.key === "Enter") start(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") hideModal(); });
+  </script>
+</body>
+</html>
