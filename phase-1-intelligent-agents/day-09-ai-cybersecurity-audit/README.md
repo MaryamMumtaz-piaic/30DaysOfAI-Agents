@@ -11,15 +11,18 @@ Input a website URL or codebase. The agent runs automated security checks — de
 
 ## ✨ Key Features
 
-- OWASP Top 10 vulnerability scanning
-- Exposed secrets and API key detection
-- Dependency vulnerability check against CVE database
-- HTTP security header analysis
+- Two modes: live **URL scan** (HTTP security headers, HTTPS/TLS, cookies) or **code audit**
+- OWASP Top 10 review (SQLi, XSS, CSRF, SSRF, path traversal, insecure crypto, etc.)
+- Regex-based exposed-secret / API-key detection with automatic redaction
+- Severity-rated findings (critical → info) with a letter grade & risk score
 - Prioritized remediation roadmap with code-level fixes
+- Downloadable PDF audit report
 
 ## 🛠️ Tech Stack
 
-Python · OpenAI SDK · Requests · BeautifulSoup · Safety · FastAPI · HTML · Tailwind CSS · JavaScript
+Python · OpenAI GPT-4o-mini · httpx · FastAPI · WebSockets · ReportLab · HTML · Tailwind CSS · Chart.js · JavaScript
+
+> **Authorized use only** — scan systems and code you own or have explicit permission to test. Deterministic checks (headers, secret regexes) run locally; the OWASP analysis is done by the model.
 
 ## ⚙️ Setup
 
@@ -34,7 +37,7 @@ uvicorn main:app --reload
 
 ## 📌 Status
 
-🚧 In development
+✅ Complete
 
 ---
 

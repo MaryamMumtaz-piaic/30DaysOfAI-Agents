@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Medical Report Analyzer · Day 08</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    @keyframes pulse-dot { 0%,100%{opacity:.35} 50%{opacity:1} }
+    .dot { animation: pulse-dot 1.2s ease-in-out infinite; }
+    body { background: linear-gradient(180deg,#f0fdfa 0%,#f8fafc 40%,#ffffff 100%); }
+    .spin { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg) } }
+    @keyframes pop { 0%{transform:scale(.9);opacity:0} 100%{transform:scale(1);opacity:1} }
+    .pop { animation: pop .22s ease-out; }
+    @keyframes rise { 0%{transform:translateY(12px);opacity:0} 100%{transform:translateY(0);opacity:1} }
+    .rise { animation: rise .4s ease-out both; }
+  </style>
+</head>
+<body class="h-full min-h-screen text-slate-800 antialiased flex flex-col">
+
+  <!-- Navbar -->
+  <nav class="sticky top-0 z-20 backdrop-blur bg-white/80 border-b border-slate-200">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center text-white font-bold shadow-sm">🩺</div>
+        <div class="leading-tight">
+          <p class="font-semibold text-slate-900 text-sm">Medical Report Analyzer</p>
+          <p class="text-xs text-teal-600 font-medium">This is Day #8 of our 30 Days AI Agent Challenge</p>
+        </div>
+      </div>
+      <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 border border-teal-200 text-teal-700 text-xs font-semibold">
+        <span class="w-2 h-2 rounded-full bg-teal-500 dot"></span> Day 08 / 30
+      </span>
+    </div>
+  </nav>
+
+  <main class="flex-1">
+    <div class="max-w-6xl mx-auto px-4 py-8">
+
+      <!-- Hero -->
+      <header class="text-center mb-6">
+        <h1 class="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-teal-600 to-emerald-600 bg-clip-text text-transparent">
+          AI Medical Report Analyzer
+        </h1>
+        <p class="mt-3 text-slate-500 max-w-2xl mx-auto">
+          Upload a lab result, blood report, or a photo of one. The agent checks every value against
+          reference ranges, flags what's abnormal, and explains it in plain English.
+        </p>
+        <div class="mt-4 flex flex-wrap justify-center gap-2 text-xs">
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">🖼️ PDF or image (vision)</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">🚦 Normal/borderline/critical</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">💬 Plain-English</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">📄 PDF summary</span>
+        </div>
+      </header>
+
+      <!-- Disclaimer -->
+      <div class="mb-6 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-3 text-sm text-center">
+        ⚕️ Educational tool only — <span class="font-medium">not a medical diagnosis</span>. Always consult a healthcare professional.
+      </div>
+
+      <!-- Input card -->
+      <section class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <div id="drop" class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center cursor-pointer hover:border-teal-400 hover:bg-teal-50/40 transition">
+          <input id="file" type="file" accept=".pdf,.txt,.md,.png,.jpg,.jpeg,.webp,.bmp" class="hidden" />
+          <div class="mx-auto w-12 h-12 rounded-xl bg-teal-100 flex items-center justify-center text-2xl">🩺</div>
+          <p class="mt-2 text-sm font-medium text-slate-700">Drop a PDF or image, or <span class="text-teal-600">browse</span></p>
+          <p id="file-info" class="mt-1 text-xs text-slate-400">PDF, PNG, JPG, TXT · up to 12 MB</p>
+        </div>
+
+        <img id="preview" class="hidden mt-3 mx-auto max-h-56 rounded-xl border border-slate-200" alt="report preview" />
+
+        <div class="flex items-center gap-3 my-4">
+          <div class="flex-1 h-px bg-slate-200"></div>
+          <span class="text-xs text-slate-400 font-medium">or paste report text</span>
+          <div class="flex-1 h-px bg-slate-200"></div>
+        </div>
+
+        <textarea id="text" rows="5" placeholder="Paste lab values here, e.g.  Hemoglobin: 11.2 g/dL (13.5-17.5) ..."
+          class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white"></textarea>
+
+        <div class="mt-4">
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Patient context <span class="text-slate-400">(optional)</span></label>
+          <input id="context" type="text" placeholder="e.g. 34-year-old female, vegetarian, feeling fatigued"
+            class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white" />
+        </div>
+
+        <div class="flex items-center justify-between mt-4">
+          <button id="sample" class="text-sm text-teal-700 font-medium hover:text-teal-800">Load sample CBC</button>
+          <button id="run" class="px-6 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold shadow-sm inline-flex items-center gap-2">
+            <span id="run-label">Analyze report</span>
+            <svg id="spinner" class="hidden spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-opacity=".3"/><path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3"/></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- Progress -->
+      <section id="progress" class="hidden mt-6 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <h2 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 dot"></span> Live progress
+        </h2>
+        <ul id="log" class="space-y-1.5 text-sm text-slate-600 font-mono max-h-56 overflow-auto"></ul>
+      </section>
+
+      <!-- Error -->
+      <div id="error" class="hidden mt-6 bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm"></div>
+
+      <!-- Results -->
+      <section id="results" class="hidden mt-6 space-y-6"></section>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-200 bg-white/70">
+    <div class="max-w-6xl mx-auto px-4 py-5 text-center text-sm text-slate-500">
+      Made by <span class="font-semibold text-teal-600">Maryam Mumtaz</span>
+      <span class="mx-1.5 text-slate-300">·</span>
+      AI Engineer &amp; Founder, Marsa Empower
+    </div>
+  </footer>
+
+  <!-- Success popup -->
+  <div id="modal" class="hidden fixed inset-0 z-40 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+    <div class="pop bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
+      <div class="mx-auto w-14 h-14 rounded-full bg-teal-100 flex items-center justify-center">
+        <svg class="w-8 h-8 text-teal-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h3 class="mt-4 text-lg font-bold text-slate-900">Analysis ready!</h3>
+      <p id="modal-sub" class="mt-1 text-sm text-slate-500">Your report has been analyzed.</p>
+      <div class="mt-5 flex gap-2">
+        <button id="modal-close" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 text-sm font-medium">View results</button>
+        <a id="modal-download" href="#" class="flex-1 px-4 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold inline-flex items-center justify-center gap-1.5">
+          ⬇ Download PDF
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let chart = null;
+    let currentJob = null;
+    let pendingImage = "";  // data URL when an image is uploaded
+
+    function esc(s){ const d=document.createElement("div"); d.textContent=s??""; return d.innerHTML; }
+    function log(stage, msg) {
+      const li = document.createElement("li");
+      li.innerHTML = `<span class="text-teal-600 font-semibold">[${stage}]</span> ${esc(msg)}`;
+      $("log").appendChild(li);
+      $("log").scrollTop = $("log").scrollHeight;
+    }
+
+    // ---- Upload ----
+    $("drop").addEventListener("click", () => $("file").click());
+    $("file").addEventListener("change", (e) => { if (e.target.files[0]) uploadFile(e.target.files[0]); });
+    ["dragover","dragenter"].forEach(ev => $("drop").addEventListener(ev, (e) => { e.preventDefault(); $("drop").classList.add("border-teal-500","bg-teal-50/60"); }));
+    ["dragleave","drop"].forEach(ev => $("drop").addEventListener(ev, (e) => { e.preventDefault(); $("drop").classList.remove("border-teal-500","bg-teal-50/60"); }));
+    $("drop").addEventListener("drop", (e) => { if (e.dataTransfer.files[0]) uploadFile(e.dataTransfer.files[0]); });
+
+    async function uploadFile(file) {
+      $("file-info").textContent = `Reading ${file.name}...`;
+      $("error").classList.add("hidden");
+      pendingImage = "";
+      $("preview").classList.add("hidden");
+      const fd = new FormData(); fd.append("file", file);
+      try {
+        const res = await fetch("/extract", { method:"POST", body:fd });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error||"Upload failed");
+        if (data.kind === "image") {
+          pendingImage = data.image_url;
+          $("preview").src = data.image_url;
+          $("preview").classList.remove("hidden");
+          $("text").value = "";
+          $("file-info").innerHTML = `<span class="text-teal-600 font-medium">✓ ${esc(file.name)}</span> · image ready for vision analysis`;
+        } else {
+          $("text").value = data.text;
+          $("file-info").innerHTML = `<span class="text-teal-600 font-medium">✓ ${esc(file.name)}</span> · ${(data.text||"").length.toLocaleString()} chars extracted`;
+        }
+      } catch (err) {
+        $("file-info").textContent = "PDF, PNG, JPG, TXT · up to 12 MB";
+        $("error").textContent = "Error: " + err.message; $("error").classList.remove("hidden");
+      }
+    }
+
+    $("sample").addEventListener("click", () => {
+      pendingImage = ""; $("preview").classList.add("hidden");
+      $("text").value = SAMPLE_CBC;
+      $("context").value = "28-year-old female, vegetarian, reports fatigue";
+      $("file-info").textContent = "Sample CBC loaded";
+    });
+
+    const ST = {
+      normal:     { badge:"text-emerald-700 bg-emerald-50 border-emerald-200", dot:"#16a34a", row:"" },
+      borderline: { badge:"text-amber-700 bg-amber-50 border-amber-200", dot:"#d97706", row:"bg-amber-50/40" },
+      critical:   { badge:"text-red-700 bg-red-50 border-red-200", dot:"#dc2626", row:"bg-red-50/40" },
+    };
+    const stUI = (s) => ST[(s||"normal").toLowerCase()] || ST.normal;
+    const arrow = (d) => ({low:"↓",high:"↑"}[(d||"").toLowerCase()]||"");
+    const sevCls = (s) => ({low:"bg-lime-50 text-lime-700 border-lime-200",medium:"bg-amber-50 text-amber-700 border-amber-200",high:"bg-red-50 text-red-700 border-red-200"}[(s||"low").toLowerCase()]||"bg-slate-50 text-slate-600 border-slate-200");
+
+    function render(job_id, d) {
+      if (chart) { chart.destroy(); chart = null; }
+      currentJob = job_id;
+      const s = d.stats||{}, markers = d.markers||[];
+      const overall = (d.overall_status||"normal").toLowerCase();
+      const oUI = stUI(overall);
+
+      const rows = markers.map(m => {
+        const u = stUI(m.status);
+        return `<tr class="border-t border-slate-100 ${u.row}">
+          <td class="py-2 px-3 font-medium text-slate-800">${esc(m.name)}</td>
+          <td class="py-2 px-3 text-slate-700 whitespace-nowrap">${esc(m.value)} <span class="text-slate-400 text-xs">${esc(m.unit)}</span></td>
+          <td class="py-2 px-3 text-slate-500 text-xs whitespace-nowrap">${esc(m.reference_range)}</td>
+          <td class="py-2 px-3"><span class="px-2 py-0.5 rounded-md border text-xs font-semibold ${u.badge}">${esc(m.status)} ${arrow(m.direction)}</span></td>
+          <td class="py-2 px-3 text-slate-600 text-xs">${esc(m.explanation)}</td>
+        </tr>`;
+      }).join("");
+
+      const risks = (d.risks||[]).map(r => `
+        <div class="flex items-start gap-3 py-2.5 border-t border-slate-100 first:border-0">
+          <span class="px-2 py-0.5 rounded-md border text-xs font-semibold ${sevCls(r.severity)}">${esc((r.severity||"low").toUpperCase())}</span>
+          <div><p class="text-sm text-slate-700">${esc(r.risk)}</p>
+          ${(r.based_on||[]).length ? `<p class="text-xs text-slate-400">based on: ${(r.based_on||[]).map(esc).join(", ")}</p>` : ""}</div>
+        </div>`).join("");
+
+      const recs = (d.recommendations||[]).map(r => `<li class="flex gap-2"><span class="text-teal-500">▸</span><span>${esc(r)}</span></li>`).join("");
+
+      $("results").innerHTML = `
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">${esc(d.report_type||"Report")}</h2>
+            <span class="inline-flex items-center gap-1.5 mt-1 px-2.5 py-0.5 rounded-md border text-xs font-semibold ${oUI.badge}">Overall: ${esc(overall)}</span>
+          </div>
+          <a href="/report/${job_id}.pdf" class="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold shadow-sm inline-flex items-center gap-1.5">⬇ Download PDF summary</a>
+        </div>
+        ${d.urgent && d.urgent_note ? `<div class="bg-red-50 border-2 border-red-300 text-red-800 rounded-xl p-4 text-sm font-medium">⚠ ${esc(d.urgent_note)}</div>` : ""}
+        <div class="grid lg:grid-cols-3 gap-5">
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm text-center">
+            <h3 class="font-semibold text-slate-800 mb-2 text-sm">Marker breakdown</h3>
+            <canvas id="statChart" height="180"></canvas>
+          </div>
+          <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="font-semibold text-slate-800 mb-1.5">What this means</h3>
+            <p class="text-slate-600 text-sm">${esc(d.patient_summary||"")}</p>
+            <div class="grid grid-cols-4 gap-2 mt-4 text-center">
+              ${statTile("Total", s.total||0, "text-slate-900")}
+              ${statTile("Normal", s.normal||0, "text-emerald-600")}
+              ${statTile("Borderline", s.borderline||0, "text-amber-600")}
+              ${statTile("Critical", s.critical||0, "text-red-600")}
+            </div>
+          </div>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm overflow-x-auto">
+          <h3 class="font-semibold text-slate-800 mb-3">🔬 Marker-by-marker results</h3>
+          <table class="w-full text-sm">
+            <thead><tr class="text-left text-slate-500">
+              <th class="py-2 px-3 font-semibold">Marker</th><th class="py-2 px-3 font-semibold">Value</th>
+              <th class="py-2 px-3 font-semibold">Reference</th><th class="py-2 px-3 font-semibold">Status</th>
+              <th class="py-2 px-3 font-semibold">What it means</th>
+            </tr></thead>
+            <tbody>${rows || '<tr><td colspan="5" class="py-3 px-3 text-slate-400">No markers detected.</td></tr>'}</tbody>
+          </table>
+        </div>
+        <div class="grid md:grid-cols-2 gap-5">
+          ${risks ? `<div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="font-semibold text-slate-800 mb-1">⚠ Potential health risks</h3><div>${risks}</div></div>` : ""}
+          ${recs ? `<div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="font-semibold text-slate-800 mb-3">✅ Recommended next steps</h3>
+            <ul class="space-y-1.5 text-sm text-slate-600">${recs}</ul></div>` : ""}
+        </div>
+        <p class="text-xs text-slate-400 text-center">AI-generated · not a medical diagnosis · consult a healthcare professional.</p>`;
+      $("results").classList.remove("hidden");
+
+      buildChart(s);
+      showModal(job_id, s, overall);
+    }
+
+    function statTile(label, val, cls) {
+      return `<div class="bg-slate-50 rounded-xl py-2"><p class="text-lg font-bold ${cls}">${val}</p><p class="text-[10px] uppercase tracking-wide text-slate-400">${label}</p></div>`;
+    }
+
+    function buildChart(s) {
+      const ctx = $("statChart"); if (!ctx) return;
+      chart = new Chart(ctx, {
+        type:"doughnut",
+        data:{ labels:["Normal","Borderline","Critical"],
+          datasets:[{ data:[s.normal||0, s.borderline||0, s.critical||0],
+            backgroundColor:["#16a34a","#d97706","#dc2626"], borderWidth:2, borderColor:"#fff" }]},
+        options:{ responsive:true, maintainAspectRatio:true, cutout:"62%",
+          plugins:{ legend:{ position:"bottom", labels:{ usePointStyle:true, padding:14, font:{size:11} } } } },
+      });
+    }
+
+    function showModal(job_id, s, overall) {
+      $("modal-sub").textContent = `${s.total||0} markers · ${s.critical||0} critical · overall ${overall}.`;
+      $("modal-download").href = `/report/${job_id}.pdf`;
+      $("modal").classList.remove("hidden");
+    }
+    function hideModal(){ $("modal").classList.add("hidden"); }
+    $("modal-close").addEventListener("click", () => { hideModal(); $("results").scrollIntoView({behavior:"smooth"}); });
+    $("modal").addEventListener("click", (e) => { if (e.target === $("modal")) hideModal(); });
+    $("modal-download").addEventListener("click", hideModal);
+
+    function start() {
+      const text = $("text").value.trim();
+      if (!text && !pendingImage) { $("error").textContent = "Upload a report/image or paste text first."; $("error").classList.remove("hidden"); return; }
+
+      $("run").disabled = true;
+      $("run-label").textContent = "Analyzing";
+      $("spinner").classList.remove("hidden");
+      $("error").classList.add("hidden");
+      $("results").classList.add("hidden");
+      $("log").innerHTML = "";
+      $("progress").classList.remove("hidden");
+
+      const proto = location.protocol === "https:" ? "wss" : "ws";
+      const ws = new WebSocket(`${proto}://${location.host}/ws/analyze`);
+      ws.onopen = () => ws.send(JSON.stringify({ text, image_url: pendingImage, patient_context: $("context").value.trim() }));
+      ws.onmessage = (ev) => {
+        const m = JSON.parse(ev.data);
+        if (m.type === "progress") log(m.stage, m.message);
+        else if (m.type === "result") render(m.job_id, m.data);
+        else if (m.type === "error") { $("error").textContent = "Error: " + m.message; $("error").classList.remove("hidden"); }
+      };
+      const done = () => { $("run").disabled = false; $("run-label").textContent = "Analyze report"; $("spinner").classList.add("hidden"); };
+      ws.onclose = done;
+      ws.onerror = () => { $("error").textContent = "Connection error. Is the server running?"; $("error").classList.remove("hidden"); done(); };
+    }
+
+    $("run").addEventListener("click", start);
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") hideModal(); });
+
+    const SAMPLE_CBC = `COMPLETE BLOOD COUNT (CBC)
+Hemoglobin: 10.8 g/dL   (Ref: 12.0-15.5)
+Hematocrit: 33%          (Ref: 36-46)
+RBC Count: 3.9 million/uL (Ref: 4.2-5.4)
+WBC Count: 7.2 x10^9/L   (Ref: 4.0-11.0)
+Platelets: 260 x10^9/L   (Ref: 150-400)
+MCV: 74 fL               (Ref: 80-100)
+Ferritin: 8 ng/mL        (Ref: 15-150)
+Vitamin B12: 410 pg/mL   (Ref: 200-900)
+Fasting Glucose: 92 mg/dL (Ref: 70-99)
+Total Cholesterol: 205 mg/dL (Ref: <200)`;
+  </script>
+</body>
+</html>

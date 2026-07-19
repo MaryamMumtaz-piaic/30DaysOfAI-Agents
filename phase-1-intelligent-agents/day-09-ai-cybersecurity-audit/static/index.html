@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cybersecurity Audit Agent · Day 09</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    @keyframes pulse-dot { 0%,100%{opacity:.35} 50%{opacity:1} }
+    .dot { animation: pulse-dot 1.2s ease-in-out infinite; }
+    body { background: linear-gradient(180deg,#0f172a 0%,#0b1120 100%); }
+    .spin { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg) } }
+    @keyframes pop { 0%{transform:scale(.9);opacity:0} 100%{transform:scale(1);opacity:1} }
+    .pop { animation: pop .22s ease-out; }
+    @keyframes rise { 0%{transform:translateY(12px);opacity:0} 100%{transform:translateY(0);opacity:1} }
+    .rise { animation: rise .4s ease-out both; }
+  </style>
+</head>
+<body class="h-full min-h-screen text-slate-200 antialiased flex flex-col">
+
+  <!-- Navbar -->
+  <nav class="sticky top-0 z-20 backdrop-blur bg-slate-900/80 border-b border-slate-800">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold shadow-sm">🛡️</div>
+        <div class="leading-tight">
+          <p class="font-semibold text-white text-sm">Cybersecurity Audit Agent</p>
+          <p class="text-xs text-blue-400 font-medium">This is Day #9 of our 30 Days AI Agent Challenge</p>
+        </div>
+      </div>
+      <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs font-semibold">
+        <span class="w-2 h-2 rounded-full bg-blue-400 dot"></span> Day 09 / 30
+      </span>
+    </div>
+  </nav>
+
+  <main class="flex-1">
+    <div class="max-w-6xl mx-auto px-4 py-8">
+
+      <!-- Hero -->
+      <header class="text-center mb-6">
+        <h1 class="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
+          AI Cybersecurity Audit Agent
+        </h1>
+        <p class="mt-3 text-slate-400 max-w-2xl mx-auto">
+          Scan a live URL's HTTP security headers, or paste code for an OWASP Top 10 review.
+          Get severity-rated findings, exposed-secret detection, and a prioritized fix roadmap.
+        </p>
+        <div class="mt-4 flex flex-wrap justify-center gap-2 text-xs">
+          <span class="px-2.5 py-1 rounded-full bg-slate-800/70 border border-slate-700 text-slate-300">🔐 Security headers</span>
+          <span class="px-2.5 py-1 rounded-full bg-slate-800/70 border border-slate-700 text-slate-300">🕵️ Exposed secrets</span>
+          <span class="px-2.5 py-1 rounded-full bg-slate-800/70 border border-slate-700 text-slate-300">💉 OWASP Top 10</span>
+          <span class="px-2.5 py-1 rounded-full bg-slate-800/70 border border-slate-700 text-slate-300">🩹 Fix roadmap</span>
+        </div>
+      </header>
+
+      <!-- Authorized-use notice -->
+      <div class="mb-6 bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-xl p-3 text-sm text-center">
+        ⚠️ Only scan systems and code you own or are <span class="font-medium">authorized to test</span>.
+      </div>
+
+      <!-- Input card -->
+      <section class="bg-slate-800/60 border border-slate-700 rounded-2xl p-5 shadow-sm backdrop-blur">
+        <!-- Mode toggle -->
+        <div class="flex gap-2 mb-4">
+          <button id="mode-url" class="mode-btn flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold bg-blue-600 text-white">🌐 Scan a URL</button>
+          <button id="mode-code" class="mode-btn flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold bg-slate-900 border border-slate-700 text-slate-400 hover:text-slate-200">📝 Audit code</button>
+        </div>
+
+        <!-- URL input -->
+        <div id="url-pane">
+          <label class="block text-sm font-medium text-slate-300 mb-1.5">Website URL</label>
+          <input id="url" type="text" placeholder="example.com"
+            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+
+        <!-- Code input -->
+        <div id="code-pane" class="hidden">
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-sm font-medium text-slate-300">Source code</label>
+            <input id="language" type="text" placeholder="language (e.g. python, js)"
+              class="w-48 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <textarea id="code" rows="10" placeholder="Paste code to audit for vulnerabilities..."
+            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm font-mono text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+        </div>
+
+        <div class="flex items-center justify-between mt-4">
+          <button id="sample" class="text-sm text-blue-400 font-medium hover:text-blue-300">Load example</button>
+          <button id="run" class="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold shadow-sm inline-flex items-center gap-2">
+            <span id="run-label">Run audit</span>
+            <svg id="spinner" class="hidden spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-opacity=".3"/><path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3"/></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- Progress -->
+      <section id="progress" class="hidden mt-6 bg-slate-800/60 border border-slate-700 rounded-2xl p-5 shadow-sm backdrop-blur">
+        <h2 class="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-cyan-400 dot"></span> Live progress
+        </h2>
+        <ul id="log" class="space-y-1.5 text-sm text-slate-400 font-mono max-h-56 overflow-auto"></ul>
+      </section>
+
+      <!-- Error -->
+      <div id="error" class="hidden mt-6 bg-red-500/10 border border-red-500/30 text-red-300 rounded-xl p-4 text-sm"></div>
+
+      <!-- Results -->
+      <section id="results" class="hidden mt-6 space-y-6"></section>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800">
+    <div class="max-w-6xl mx-auto px-4 py-5 text-center text-sm text-slate-500">
+      Made by <span class="font-semibold text-blue-400">Maryam Mumtaz</span>
+      <span class="mx-1.5 text-slate-700">·</span>
+      AI Engineer &amp; Founder, Marsa Empower
+    </div>
+  </footer>
+
+  <!-- Success popup -->
+  <div id="modal" class="hidden fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div class="pop bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
+      <div id="modal-grade" class="mx-auto w-16 h-16 rounded-full flex items-center justify-center text-3xl font-bold">A</div>
+      <h3 class="mt-4 text-lg font-bold text-white">Audit complete!</h3>
+      <p id="modal-sub" class="mt-1 text-sm text-slate-400">Your security report is ready.</p>
+      <div class="mt-5 flex gap-2">
+        <button id="modal-close" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-600 text-slate-300 hover:bg-slate-700 text-sm font-medium">View findings</button>
+        <a id="modal-download" href="#" class="flex-1 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold inline-flex items-center justify-center gap-1.5">
+          ⬇ Download PDF
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let chart = null;
+    let mode = "url";
+    let currentJob = null;
+
+    function esc(s){ const d=document.createElement("div"); d.textContent=s??""; return d.innerHTML; }
+    function log(stage, msg) {
+      const li = document.createElement("li");
+      li.innerHTML = `<span class="text-blue-400 font-semibold">[${stage}]</span> ${esc(msg)}`;
+      $("log").appendChild(li);
+      $("log").scrollTop = $("log").scrollHeight;
+    }
+
+    function setMode(m) {
+      mode = m;
+      $("mode-url").className = "mode-btn flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold " + (m==="url" ? "bg-blue-600 text-white" : "bg-slate-900 border border-slate-700 text-slate-400 hover:text-slate-200");
+      $("mode-code").className = "mode-btn flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold " + (m==="code" ? "bg-blue-600 text-white" : "bg-slate-900 border border-slate-700 text-slate-400 hover:text-slate-200");
+      $("url-pane").classList.toggle("hidden", m!=="url");
+      $("code-pane").classList.toggle("hidden", m!=="code");
+    }
+    $("mode-url").addEventListener("click", () => setMode("url"));
+    $("mode-code").addEventListener("click", () => setMode("code"));
+
+    $("sample").addEventListener("click", () => {
+      if (mode === "url") { $("url").value = "example.com"; }
+      else { $("language").value = "python"; $("code").value = SAMPLE_CODE; }
+    });
+
+    const SEV = {
+      critical:{ text:"text-red-300", bg:"bg-red-500/10 border-red-500/40", bar:"#dc2626", chip:"bg-red-500/15 text-red-300 border-red-500/40" },
+      high:    { text:"text-red-300", bg:"bg-red-500/5 border-red-500/30", bar:"#ef4444", chip:"bg-red-500/10 text-red-300 border-red-500/30" },
+      medium:  { text:"text-amber-300", bg:"bg-amber-500/5 border-amber-500/30", bar:"#f59e0b", chip:"bg-amber-500/10 text-amber-300 border-amber-500/30" },
+      low:     { text:"text-blue-300", bg:"bg-blue-500/5 border-blue-500/30", bar:"#3b82f6", chip:"bg-blue-500/10 text-blue-300 border-blue-500/30" },
+      info:    { text:"text-slate-300", bg:"bg-slate-500/5 border-slate-600", bar:"#64748b", chip:"bg-slate-500/10 text-slate-300 border-slate-600" },
+    };
+    const sevUI = (s) => SEV[(s||"info").toLowerCase()] || SEV.info;
+    const GRADE = { A:"#16a34a", B:"#65a30d", C:"#d97706", D:"#ea580c", F:"#dc2626" };
+
+    function render(job_id, d) {
+      if (chart) { chart.destroy(); chart = null; }
+      currentJob = job_id;
+      const c = d.counts || {}, findings = d.findings || [];
+      const gcolor = GRADE[d.grade] || "#64748b";
+
+      const findingCards = findings.map((f, i) => {
+        const u = sevUI(f.severity);
+        return `<div class="rounded-2xl border ${u.bg} p-4">
+          <div class="flex items-start justify-between gap-3 flex-wrap">
+            <h4 class="font-semibold text-white text-sm">${i+1}. ${esc(f.title)}</h4>
+            <span class="px-2 py-0.5 rounded-md border text-xs font-bold ${u.chip}">${esc((f.severity||"info").toUpperCase())}</span>
+          </div>
+          <div class="mt-1 flex flex-wrap gap-2 text-[11px] text-slate-400">
+            <span class="px-1.5 py-0.5 rounded bg-slate-900/60">${esc(f.category||"General")}</span>
+            ${f.cwe ? `<span class="px-1.5 py-0.5 rounded bg-slate-900/60">${esc(f.cwe)}</span>` : ""}
+            ${f.line ? `<span class="px-1.5 py-0.5 rounded bg-slate-900/60">line ${esc(f.line)}</span>` : ""}
+          </div>
+          ${f.detail ? `<p class="mt-2 text-sm text-slate-300">${esc(f.detail)}</p>` : ""}
+          ${f.fix ? `<p class="mt-2 text-sm"><span class="font-medium text-emerald-300">Fix:</span> <span class="text-slate-300">${esc(f.fix)}</span></p>` : ""}
+          ${f.fix_code ? `<pre class="mt-2 bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-emerald-200 overflow-x-auto"><code>${esc(f.fix_code)}</code></pre>` : ""}
+        </div>`;
+      }).join("");
+
+      const recs = (d.recommendations||[]).map((r,i)=>`<li class="flex gap-2"><span class="text-blue-400 font-bold">${i+1}.</span><span>${esc(r)}</span></li>`).join("");
+
+      $("results").innerHTML = `
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+          <h2 class="text-lg font-bold text-white truncate">🎯 ${esc(d.target||"")}</h2>
+          <a href="/report/${job_id}.pdf" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold shadow-sm inline-flex items-center gap-1.5">⬇ Download PDF report</a>
+        </div>
+        <div class="grid lg:grid-cols-3 gap-5">
+          <div class="bg-slate-800/60 border border-slate-700 rounded-2xl p-5 text-center backdrop-blur">
+            <div class="mx-auto w-20 h-20 rounded-full flex items-center justify-center text-4xl font-bold" style="background:${gcolor}20;color:${gcolor}">${esc(d.grade||"?")}</div>
+            <p class="mt-2 text-sm text-slate-400">Security grade</p>
+            <p class="text-2xl font-bold text-white mt-1">${d.risk_score||0}<span class="text-sm text-slate-500">/100 risk</span></p>
+          </div>
+          <div class="bg-slate-800/60 border border-slate-700 rounded-2xl p-5 backdrop-blur">
+            <h3 class="font-semibold text-slate-200 mb-2 text-sm">Severity breakdown</h3>
+            <canvas id="sevChart" height="160"></canvas>
+          </div>
+          <div class="bg-slate-800/60 border border-slate-700 rounded-2xl p-5 backdrop-blur">
+            <h3 class="font-semibold text-slate-200 mb-2 text-sm">Summary</h3>
+            <p class="text-sm text-slate-400">${esc(d.summary||"")}</p>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          ${["critical","high","medium","low","info"].map(s=>`<span class="px-2.5 py-1 rounded-lg border text-xs font-semibold ${sevUI(s).chip}">${c[s]||0} ${s}</span>`).join("")}
+        </div>
+        <div>
+          <h3 class="font-semibold text-slate-200 mb-3">🔎 Findings (${findings.length})</h3>
+          <div class="space-y-3">${findingCards || '<p class="text-slate-400 text-sm">No issues detected. 🎉</p>'}</div>
+        </div>
+        ${recs ? `<div class="bg-slate-800/60 border border-slate-700 rounded-2xl p-5 backdrop-blur">
+          <h3 class="font-semibold text-slate-200 mb-3">🩹 Remediation roadmap</h3>
+          <ul class="space-y-1.5 text-sm text-slate-300">${recs}</ul></div>` : ""}
+        <p class="text-xs text-slate-600 text-center">Automated defensive audit · verify findings with a security professional.</p>`;
+      $("results").classList.remove("hidden");
+
+      buildChart(c);
+      showModal(job_id, d);
+    }
+
+    function buildChart(c) {
+      const ctx = $("sevChart"); if (!ctx) return;
+      chart = new Chart(ctx, {
+        type:"bar",
+        data:{ labels:["Critical","High","Medium","Low","Info"],
+          datasets:[{ data:[c.critical||0,c.high||0,c.medium||0,c.low||0,c.info||0],
+            backgroundColor:["#dc2626","#ef4444","#f59e0b","#3b82f6","#64748b"], borderRadius:6, maxBarThickness:30 }]},
+        options:{ responsive:true, maintainAspectRatio:true, plugins:{ legend:{display:false} },
+          scales:{ y:{ beginAtZero:true, ticks:{ color:"#64748b", precision:0 }, grid:{ color:"rgba(148,163,184,0.1)" } },
+                   x:{ ticks:{ color:"#94a3b8", font:{size:10} }, grid:{ display:false } } } },
+      });
+    }
+
+    function showModal(job_id, d) {
+      const g = $("modal-grade"); const gcolor = GRADE[d.grade] || "#64748b";
+      g.textContent = d.grade || "?"; g.style.background = gcolor+"20"; g.style.color = gcolor;
+      $("modal-sub").textContent = `${d.total||0} findings · risk ${d.risk_score||0}/100 · grade ${d.grade||"?"}.`;
+      $("modal-download").href = `/report/${job_id}.pdf`;
+      $("modal").classList.remove("hidden");
+    }
+    function hideModal(){ $("modal").classList.add("hidden"); }
+    $("modal-close").addEventListener("click", () => { hideModal(); $("results").scrollIntoView({behavior:"smooth"}); });
+    $("modal").addEventListener("click", (e) => { if (e.target === $("modal")) hideModal(); });
+    $("modal-download").addEventListener("click", hideModal);
+
+    function start() {
+      const target = mode === "url" ? $("url").value.trim() : $("code").value.trim();
+      if (!target) { $("error").textContent = mode==="url" ? "Enter a URL to scan." : "Paste code to audit."; $("error").classList.remove("hidden"); return; }
+
+      $("run").disabled = true;
+      $("run-label").textContent = "Auditing";
+      $("spinner").classList.remove("hidden");
+      $("error").classList.add("hidden");
+      $("results").classList.add("hidden");
+      $("log").innerHTML = "";
+      $("progress").classList.remove("hidden");
+
+      const proto = location.protocol === "https:" ? "wss" : "ws";
+      const ws = new WebSocket(`${proto}://${location.host}/ws/audit`);
+      ws.onopen = () => ws.send(JSON.stringify({ mode, target, language: $("language").value.trim() }));
+      ws.onmessage = (ev) => {
+        const m = JSON.parse(ev.data);
+        if (m.type === "progress") log(m.stage, m.message);
+        else if (m.type === "result") render(m.job_id, m.data);
+        else if (m.type === "error") { $("error").textContent = "Error: " + m.message; $("error").classList.remove("hidden"); }
+      };
+      const done = () => { $("run").disabled = false; $("run-label").textContent = "Run audit"; $("spinner").classList.add("hidden"); };
+      ws.onclose = done;
+      ws.onerror = () => { $("error").textContent = "Connection error. Is the server running?"; $("error").classList.remove("hidden"); done(); };
+    }
+
+    $("run").addEventListener("click", start);
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") hideModal(); });
+
+    const SAMPLE_CODE = `from flask import Flask, request
+import sqlite3, os
+
+app = Flask(__name__)
+API_KEY = "sk-1234567890abcdef1234567890abcdef"  # hardcoded secret
+
+@app.route("/user")
+def get_user():
+    uid = request.args.get("id")
+    conn = sqlite3.connect("app.db")
+    # SQL injection: user input concatenated into query
+    q = "SELECT * FROM users WHERE id = '" + uid + "'"
+    rows = conn.execute(q).fetchall()
+    return str(rows)
+
+@app.route("/greet")
+def greet():
+    name = request.args.get("name")
+    # Reflected XSS: unescaped user input in HTML
+    return "<h1>Hello " + name + "</h1>"
+
+if __name__ == "__main__":
+    app.run(debug=True)  # debug mode in production`;
+
+    setMode("url");
+  </script>
+</body>
+</html>

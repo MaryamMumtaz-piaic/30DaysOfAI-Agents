@@ -11,15 +11,19 @@ Upload lab results, blood reports, or medical scans (PDF/image). The agent analy
 
 ## ✨ Key Features
 
-- OCR-based report text extraction from PDFs and images
+- PDF text extraction + image reading via GPT-4o vision (no Tesseract needed)
 - Value-by-value comparison against medical reference ranges
-- Risk flagging (normal/borderline/critical) with color coding
-- Plain-English explanations for medical terminology
-- Recommended follow-up actions and specialist referrals
+- Risk flagging (normal / borderline / critical) with color coding & ↑↓ direction
+- Plain-English explanation for every marker
+- Potential-risk detection and recommended next steps / referrals
+- Urgent-care banner for clearly out-of-range results
+- Downloadable patient-friendly PDF summary
 
 ## 🛠️ Tech Stack
 
-Python · OpenAI GPT-4o Vision · Tesseract OCR · FastAPI · HTML · Tailwind CSS · JavaScript · PyPDF2
+Python · OpenAI GPT-4o (vision) · pypdf · FastAPI · WebSockets · ReportLab · HTML · Tailwind CSS · Chart.js · JavaScript
+
+> **Not a medical diagnosis** — this is an educational tool. Image uploads use the vision model directly, so no OCR install is required. Use a vision-capable `OPENAI_MODEL` (e.g. `gpt-4o` or `gpt-4o-mini`) for photos.
 
 ## ⚙️ Setup
 
@@ -34,7 +38,7 @@ uvicorn main:app --reload
 
 ## 📌 Status
 
-🚧 In development
+✅ Complete
 
 ---
 

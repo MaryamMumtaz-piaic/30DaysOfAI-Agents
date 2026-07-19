@@ -11,15 +11,16 @@ Upload your resume and a job description. The agent reverse-engineers the job re
 
 ## ✨ Key Features
 
-- ATS keyword extraction from job descriptions
-- Resume rewriting to maximize ATS score
-- Personalized cover letter generation
-- Interview Q&A preparation (role-specific)
-- Match score with gap analysis and improvement tips
+- Reverse-engineers the job into ATS keywords, responsibilities & soft skills
+- Match score with matched/missing keywords, strengths, and gap analysis
+- Resume rewrite (summary, prioritized skills, achievement bullets) — no fabrication
+- Personalized cover letter with one-click copy
+- Role-specific interview Q&A prep (5–25 questions) with sample answers & tips
+- Resume PDF/TXT upload plus paste-in; downloadable full-package PDF
 
 ## 🛠️ Tech Stack
 
-Python · OpenAI SDK · PyPDF2 · FastAPI · HTML · Tailwind CSS · JavaScript · jsPDF
+Python · OpenAI GPT-4o-mini · pypdf · FastAPI · WebSockets · ReportLab · HTML · Tailwind CSS · Chart.js · JavaScript
 
 ## ⚙️ Setup
 
@@ -34,7 +35,7 @@ uvicorn main:app --reload
 
 ## 📌 Status
 
-🚧 In development
+✅ Complete
 
 ---
 
