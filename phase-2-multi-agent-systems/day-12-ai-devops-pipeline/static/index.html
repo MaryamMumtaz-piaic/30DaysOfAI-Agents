@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI DevOps Pipeline · Day 12</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    @keyframes pulse-dot { 0%,100%{opacity:.35} 50%{opacity:1} }
+    .dot { animation: pulse-dot 1.2s ease-in-out infinite; }
+    body { background: linear-gradient(180deg,#ecfeff 0%,#f8fafc 40%,#ffffff 100%); }
+    .spin { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg) } }
+    @keyframes pop { 0%{transform:scale(.9);opacity:0} 100%{transform:scale(1);opacity:1} }
+    .pop { animation: pop .22s ease-out; }
+    @keyframes rise { 0%{transform:translateY(12px);opacity:0} 100%{transform:translateY(0);opacity:1} }
+    .rise { animation: rise .4s ease-out both; }
+    .tab-active { background:#0ea5e9; color:#fff; }
+  </style>
+</head>
+<body class="h-full min-h-screen text-slate-800 antialiased flex flex-col">
+
+  <!-- Navbar -->
+  <nav class="sticky top-0 z-20 backdrop-blur bg-white/80 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500 to-cyan-500 flex items-center justify-center text-white font-bold shadow-sm">⚙️</div>
+        <div class="leading-tight">
+          <p class="font-semibold text-slate-900 text-sm">AI DevOps Pipeline</p>
+          <p class="text-xs text-sky-600 font-medium">This is Day #12 of our 30 Days AI Agent Challenge</p>
+        </div>
+      </div>
+      <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 text-sky-700 text-xs font-semibold">
+        <span class="w-2 h-2 rounded-full bg-sky-500 dot"></span> Day 12 / 30
+      </span>
+    </div>
+  </nav>
+
+  <main class="flex-1">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+
+      <!-- Hero -->
+      <header class="text-center mb-6">
+        <h1 class="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-sky-600 to-cyan-600 bg-clip-text text-transparent">
+          AI DevOps & CI/CD Intelligence Pipeline
+        </h1>
+        <p class="mt-3 text-slate-500 max-w-2xl mx-auto">
+          Paste a code diff or a GitHub PR URL. Four specialist agents review it in parallel —
+          quality, security, test coverage, and performance — then a deployment agent renders an
+          approve / request-changes / block verdict with a ready-to-post PR comment.
+        </p>
+        <div class="mt-4 flex flex-wrap justify-center gap-2 text-xs">
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">🧹 Code quality</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">🔒 Security scan</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">🧪 Test coverage</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">⚡ Performance</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">🚦 Deploy gate</span>
+        </div>
+      </header>
+
+      <!-- Input card -->
+      <section class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <div class="flex gap-2 mb-4">
+          <button id="tab-diff" class="tab-active px-4 py-1.5 rounded-lg text-sm font-medium border border-slate-300 transition">Paste diff</button>
+          <button id="tab-url" class="px-4 py-1.5 rounded-lg text-sm font-medium border border-slate-300 text-slate-600 hover:bg-slate-50 transition">GitHub PR URL</button>
+        </div>
+
+        <div id="pane-diff">
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">PR title (optional)</label>
+          <input id="title" type="text" autocomplete="off" placeholder="e.g. Add user login endpoint"
+            class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white" />
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">Unified diff</label>
+          <textarea id="diff" rows="9" placeholder="Paste `git diff` output here…"
+            class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white"></textarea>
+        </div>
+
+        <div id="pane-url" class="hidden">
+          <label class="block text-sm font-medium text-slate-700 mb-1.5">GitHub Pull Request URL</label>
+          <input id="pr_url" type="text" autocomplete="off" placeholder="https://github.com/owner/repo/pull/123"
+            class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white" />
+          <p class="text-xs text-slate-400 mt-1.5">Public PRs work out of the box. Private repos need a <code>GITHUB_TOKEN</code> in <code>.env</code>.</p>
+        </div>
+
+        <div class="flex items-center justify-between mt-4 gap-3 flex-wrap">
+          <button id="sample" class="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 text-sm font-medium">Load example diff</button>
+          <button id="run" class="px-6 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold shadow-sm inline-flex items-center gap-2">
+            <span id="run-label">Run pipeline</span>
+            <svg id="spinner" class="hidden spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-opacity=".3"/><path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3"/></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- Pipeline progress -->
+      <section id="progress" class="hidden mt-6 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <h2 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-cyan-500 dot"></span> Pipeline running
+        </h2>
+        <div id="agents" class="grid sm:grid-cols-2 lg:grid-cols-5 gap-2 mb-4"></div>
+        <ul id="log" class="space-y-1.5 text-sm text-slate-600 font-mono max-h-56 overflow-auto"></ul>
+      </section>
+
+      <!-- Error -->
+      <div id="error" class="hidden mt-6 bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm"></div>
+
+      <!-- Results -->
+      <section id="results" class="hidden mt-6 space-y-6"></section>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-200 bg-white/70">
+    <div class="max-w-7xl mx-auto px-4 py-5 text-center text-sm text-slate-500">
+      Made by <span class="font-semibold text-sky-600">Maryam Mumtaz</span>
+      <span class="mx-1.5 text-slate-300">·</span>
+      AI Engineer &amp; Founder, Marsa Empower
+    </div>
+  </footer>
+
+  <!-- Success popup -->
+  <div id="modal" class="hidden fixed inset-0 z-40 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+    <div class="pop bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
+      <div id="modal-icon" class="mx-auto w-14 h-14 rounded-full bg-sky-100 flex items-center justify-center text-2xl">🚦</div>
+      <h3 id="modal-title" class="mt-4 text-lg font-bold text-slate-900">Pipeline complete!</h3>
+      <p id="modal-sub" class="mt-1 text-sm text-slate-500">Your analysis is ready.</p>
+      <div class="mt-5 flex gap-2">
+        <button id="modal-close" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 text-sm font-medium">View report</button>
+        <a id="modal-download" href="#" class="flex-1 px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold inline-flex items-center justify-center gap-1.5">
+          ⬇ Download PDF
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let data = null;
+    let currentJob = null;
+    let mode = "diff";
+
+    const AGENTS = [
+      ["quality", "Code Quality", "🧹"],
+      ["security", "Security", "🔒"],
+      ["coverage", "Test Coverage", "🧪"],
+      ["performance", "Performance", "⚡"],
+      ["deploy", "Deploy Gate", "🚦"],
+    ];
+
+    function esc(s){ const d=document.createElement("div"); d.textContent=s??""; return d.innerHTML; }
+    function log(stage, msg) {
+      const li = document.createElement("li");
+      li.innerHTML = `<span class="text-sky-600 font-semibold">[${stage}]</span> ${esc(msg)}`;
+      $("log").appendChild(li);
+      $("log").scrollTop = $("log").scrollHeight;
+    }
+
+    function renderAgents() {
+      $("agents").innerHTML = AGENTS.map(([key,name,icon]) => `
+        <div id="agent-${key}" class="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-500 transition">
+          <span class="text-base">${icon}</span>
+          <span class="flex-1 font-medium">${name}</span>
+          <span data-state="${key}" class="text-slate-300">•</span>
+        </div>`).join("");
+    }
+    function agentState(key, state) {
+      const el = $(`agent-${key}`); if (!el) return;
+      const badge = el.querySelector(`[data-state="${key}"]`);
+      if (state === "active") {
+        el.className = "flex items-center gap-2 px-3 py-2 rounded-xl border border-sky-300 bg-sky-50 text-sm text-sky-700 transition";
+        badge.innerHTML = '<svg class="spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-opacity=".3"/><path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3"/></svg>';
+      } else if (state === "done") {
+        el.className = "flex items-center gap-2 px-3 py-2 rounded-xl border border-emerald-200 bg-emerald-50 text-sm text-emerald-700 transition";
+        badge.innerHTML = "✓";
+      }
+    }
+
+    // Tabs
+    function setMode(m) {
+      mode = m;
+      $("tab-diff").classList.toggle("tab-active", m==="diff");
+      $("tab-diff").classList.toggle("text-slate-600", m!=="diff");
+      $("tab-url").classList.toggle("tab-active", m==="url");
+      $("tab-url").classList.toggle("text-slate-600", m!=="url");
+      $("pane-diff").classList.toggle("hidden", m!=="diff");
+      $("pane-url").classList.toggle("hidden", m!=="url");
+    }
+    $("tab-diff").addEventListener("click", () => setMode("diff"));
+    $("tab-url").addEventListener("click", () => setMode("url"));
+
+    const SAMPLE = `diff --git a/api/auth.py b/api/auth.py
+index 1a2b3c4..5d6e7f8 100644
+--- a/api/auth.py
++++ b/api/auth.py
+@@ -1,3 +1,18 @@
++import sqlite3
++
++API_KEY = "sk-live-9f3a1c77d2b4e8a0"
++
++def login(username, password):
++    conn = sqlite3.connect("users.db")
++    cur = conn.cursor()
++    query = "SELECT * FROM users WHERE name='" + username + "' AND pass='" + password + "'"
++    cur.execute(query)
++    row = cur.fetchone()
++    return row is not None
++
++def find_user(users, target):
++    for u in users:
++        for v in users:
++            if u == target:
++                return u
++    return None`;
+
+    $("sample").addEventListener("click", () => {
+      setMode("diff");
+      $("title").value = "Add login endpoint and user lookup";
+      $("diff").value = SAMPLE;
+    });
+
+    const DECISION = {
+      "APPROVE": ["text-emerald-600", "bg-emerald-50 border-emerald-200", "✅"],
+      "REQUEST CHANGES": ["text-amber-600", "bg-amber-50 border-amber-200", "✋"],
+      "BLOCK": ["text-red-600", "bg-red-50 border-red-200", "🛑"],
+    };
+    const RISK = { low:"text-emerald-600", medium:"text-amber-600", high:"text-red-600" };
+    const SEV = {
+      critical:"bg-red-100 text-red-800 border-red-300",
+      high:"bg-red-50 text-red-700 border-red-200",
+      medium:"bg-amber-50 text-amber-700 border-amber-200",
+      low:"bg-emerald-50 text-emerald-700 border-emerald-200",
+    };
+    const sevCls = (s)=> SEV[(s||"medium").toLowerCase()] || SEV.medium;
+    const AGENT_META = {
+      quality:["🧹","Code Quality","findings"], security:["🔒","Security","findings"],
+      coverage:["🧪","Test Coverage","gaps"], performance:["⚡","Performance","findings"],
+    };
+    const scoreColor = (s)=> s>=80?"text-emerald-600":s>=60?"text-amber-600":"text-red-600";
+
+    function render(job_id, d) {
+      data = d; currentJob = job_id;
+      const a = d.analyses||{}, dec = d.decision||{}, s = d.stats||{}, ds = d.diff_stats||{};
+      const decision = dec.decision || "REQUEST CHANGES";
+      const [txtCls, chipCls, decIcon] = DECISION[decision] || DECISION["REQUEST CHANGES"];
+
+      const listBlock = (label, items, cls) => {
+        items = (items||[]).filter(Boolean);
+        if (!items.length) return "";
+        return `<div><p class="text-xs font-semibold uppercase tracking-wide ${cls} mb-1.5">${label}</p>
+          <ul class="space-y-1 text-sm text-slate-600">${items.map(x=>`<li>• ${esc(x)}</li>`).join("")}</ul></div>`;
+      };
+
+      const agentCards = Object.keys(AGENT_META).map(key => {
+        const [icon,name,fk] = AGENT_META[key];
+        const rep = a[key]||{};
+        const items = rep[fk]||[];
+        const findings = items.map(f => `
+          <div class="border-l-2 border-slate-200 pl-3 py-1">
+            <div class="flex items-center gap-2">
+              <span class="px-1.5 py-0.5 rounded border text-[10px] font-semibold ${sevCls(f.severity)}">${esc(f.severity)}</span>
+              <span class="text-sm font-medium text-slate-800">${esc(f.title||f.area||"Issue")}</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">${esc((f.cwe?("["+f.cwe+"] "):"")+(f.detail||""))}</p>
+            ${f.suggestion?`<p class="text-xs text-sky-600 mt-0.5">→ ${esc(f.suggestion)}</p>`:""}
+          </div>`).join("") || `<p class="text-sm text-emerald-600">No issues flagged.</p>`;
+        return `<div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+          <div class="flex items-center justify-between mb-1">
+            <h3 class="font-semibold text-slate-800 flex items-center gap-2"><span>${icon}</span>${name}</h3>
+            <span class="text-lg font-bold ${scoreColor(rep.score||0)}">${rep.score||0}<span class="text-xs text-slate-400">/100</span></span>
+          </div>
+          <p class="text-sm text-slate-500 mb-3">${esc(rep.summary||"")}</p>
+          <div class="space-y-1.5">${findings}</div>
+          ${(rep.positives&&rep.positives.length)?`<div class="mt-3 pt-3 border-t border-slate-100">${listBlock("Done well", rep.positives, "text-emerald-600")}</div>`:""}
+        </div>`;
+      }).join("");
+
+      $("results").innerHTML = `
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+          <div><h2 class="text-xl font-bold text-slate-900">${esc(d.title||"Pull Request Analysis")}</h2>
+          <p class="text-sm text-slate-500">${d.pr_url?`<a href="${esc(d.pr_url)}" target="_blank" class="text-sky-600 hover:underline">${esc(d.pr_url)}</a> · `:""}+${ds.additions||0}/-${ds.deletions||0} across ${ds.files||0} file(s)${ds.truncated?" (truncated)":""}</p></div>
+          <a href="/report/${job_id}.pdf" class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold shadow-sm inline-flex items-center gap-1.5">⬇ Download report (PDF)</a>
+        </div>
+
+        <!-- Decision -->
+        <div class="rounded-2xl border ${chipCls} p-5 flex flex-col sm:flex-row items-center gap-5">
+          <div class="text-center shrink-0">
+            <div class="text-4xl">${decIcon}</div>
+            <div class="mt-1 text-lg font-bold ${txtCls}">${esc(decision)}</div>
+            <div class="text-sm text-slate-500 mt-1">risk: <b class="${RISK[dec.risk]||"text-slate-500"}">${esc(dec.risk||"—")}</b> · ${dec.confidence||0}% conf.</div>
+          </div>
+          <div class="flex-1">
+            <p class="text-sm text-slate-700">${esc(dec.rationale||"")}</p>
+            <div class="grid sm:grid-cols-2 gap-4 mt-3">
+              ${listBlock("Blocking issues", dec.blocking_issues, "text-red-600")}
+              ${listBlock("Required actions", dec.required_actions, "text-amber-600")}
+            </div>
+            ${dec.rollback_plan?`<p class="mt-3 text-sm text-slate-600"><span class="font-semibold text-sky-700">Rollback:</span> ${esc(dec.rollback_plan)}</p>`:""}
+          </div>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-6">
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="font-semibold text-slate-800 mb-3">📊 Agent Scores</h3>
+            <canvas id="scoreChart" height="200"></canvas>
+            <p class="text-center mt-3 text-sm text-slate-500">Overall <b class="${scoreColor(s.overall_score||0)}">${s.overall_score||0}/100</b></p>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="font-semibold text-slate-800 mb-3">🔺 Findings by Severity</h3>
+            <canvas id="sevChart" height="200"></canvas>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col justify-center">
+            <h3 class="font-semibold text-slate-800 mb-3">🧾 Summary</h3>
+            <div class="space-y-2 text-sm">
+              <div class="flex justify-between"><span class="text-slate-500">Total findings</span><b>${s.total_findings||0}</b></div>
+              <div class="flex justify-between"><span class="text-slate-500">Critical</span><b class="text-red-700">${(s.by_severity||{}).critical||0}</b></div>
+              <div class="flex justify-between"><span class="text-slate-500">High</span><b class="text-red-600">${(s.by_severity||{}).high||0}</b></div>
+              <div class="flex justify-between"><span class="text-slate-500">Medium</span><b class="text-amber-600">${(s.by_severity||{}).medium||0}</b></div>
+              <div class="flex justify-between"><span class="text-slate-500">Low</span><b class="text-emerald-600">${(s.by_severity||{}).low||0}</b></div>
+              <div class="flex justify-between"><span class="text-slate-500">Adds tests</span><b>${(a.coverage||{}).adds_tests?"Yes":"No"}</b></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-6">${agentCards}</div>
+
+        ${dec.pr_comment?`<div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-semibold text-slate-800">💬 Suggested PR Comment</h3>
+            <button id="copy-comment" class="text-xs px-3 py-1.5 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-50">Copy</button>
+          </div>
+          <pre class="text-sm text-slate-700 whitespace-pre-wrap font-mono bg-slate-50 rounded-xl p-4 border border-slate-100">${esc(dec.pr_comment)}</pre>
+        </div>`:""}
+
+        <div class="text-xs text-slate-400 text-center">AI analysis is advisory — pair it with your CI checks and human review before merging.</div>`;
+      $("results").classList.remove("hidden");
+
+      buildScoreChart(a);
+      buildSevChart(s.by_severity||{});
+      const copyBtn = $("copy-comment");
+      if (copyBtn) copyBtn.addEventListener("click", () => {
+        navigator.clipboard.writeText(dec.pr_comment).then(()=>{ copyBtn.textContent="Copied!"; setTimeout(()=>copyBtn.textContent="Copy",1500); });
+      });
+      showModal(job_id, d);
+    }
+
+    let scoreChart=null, sevChart=null;
+    function buildScoreChart(a) {
+      const ctx = $("scoreChart"); if (!ctx) return;
+      if (scoreChart) scoreChart.destroy();
+      scoreChart = new Chart(ctx, {
+        type:"radar",
+        data:{ labels:["Quality","Security","Coverage","Performance"], datasets:[{ label:"Score",
+          data:[(a.quality||{}).score||0,(a.security||{}).score||0,(a.coverage||{}).score||0,(a.performance||{}).score||0],
+          backgroundColor:"rgba(14,165,233,.2)", borderColor:"#0ea5e9", pointBackgroundColor:"#0ea5e9", borderWidth:2 }]},
+        options:{ responsive:true, maintainAspectRatio:true,
+          scales:{ r:{ suggestedMin:0, suggestedMax:100, ticks:{stepSize:20, font:{size:9}}, pointLabels:{font:{size:11}} } },
+          plugins:{ legend:{display:false} } },
+      });
+    }
+    function buildSevChart(counts) {
+      const ctx = $("sevChart"); if (!ctx) return;
+      if (sevChart) sevChart.destroy();
+      sevChart = new Chart(ctx, {
+        type:"bar",
+        data:{ labels:["Critical","High","Medium","Low"], datasets:[{ label:"Findings",
+          data:[counts.critical||0,counts.high||0,counts.medium||0,counts.low||0],
+          backgroundColor:["#7f1d1d","#dc2626","#f59e0b","#16a34a"], borderRadius:6 }]},
+        options:{ responsive:true, maintainAspectRatio:true,
+          plugins:{ legend:{display:false} },
+          scales:{ y:{ beginAtZero:true, ticks:{precision:0, font:{size:10}} }, x:{ ticks:{font:{size:11}} } } },
+      });
+    }
+
+    function showModal(job_id, d) {
+      const dec = d.decision||{}, decision = dec.decision||"REQUEST CHANGES";
+      const icons = {"APPROVE":"✅","REQUEST CHANGES":"✋","BLOCK":"🛑"};
+      $("modal-icon").textContent = icons[decision] || "🚦";
+      $("modal-title").textContent = decision;
+      $("modal-sub").textContent = `${d.stats?.total_findings||0} findings · overall ${d.stats?.overall_score||0}/100 · risk ${dec.risk||"—"}.`;
+      $("modal-download").href = `/report/${job_id}.pdf`;
+      $("modal").classList.remove("hidden");
+    }
+    function hideModal(){ $("modal").classList.add("hidden"); }
+    $("modal-close").addEventListener("click", () => { hideModal(); $("results").scrollIntoView({behavior:"smooth"}); });
+    $("modal").addEventListener("click", (e) => { if (e.target === $("modal")) hideModal(); });
+    $("modal-download").addEventListener("click", hideModal);
+
+    function start() {
+      const diff = $("diff").value.trim();
+      const pr_url = $("pr_url").value.trim();
+      if (mode === "diff" && diff.length < 20) { showErr("Paste a code diff (at least a few lines)."); $("diff").focus(); return; }
+      if (mode === "url" && !/^https?:\/\/github\.com\/.+\/.+\/pull\/\d+/.test(pr_url)) { showErr("Enter a valid GitHub PR URL."); $("pr_url").focus(); return; }
+
+      $("run").disabled = true;
+      $("run-label").textContent = "Analyzing";
+      $("spinner").classList.remove("hidden");
+      $("error").classList.add("hidden");
+      $("results").classList.add("hidden");
+      $("log").innerHTML = "";
+      $("progress").classList.remove("hidden");
+      renderAgents();
+
+      const payload = mode === "url"
+        ? { pr_url }
+        : { diff, title: $("title").value.trim() };
+
+      const proto = location.protocol === "https:" ? "wss" : "ws";
+      const ws = new WebSocket(`${proto}://${location.host}/ws/analyze`);
+      ws.onopen = () => ws.send(JSON.stringify(payload));
+      let parallelActivated = false;
+      ws.onmessage = (ev) => {
+        const msg = JSON.parse(ev.data);
+        if (msg.type === "progress") {
+          log(msg.stage, msg.message);
+          // The four analysts run in parallel: light them all up on the first "quality" tick.
+          if (msg.stage === "quality" && !parallelActivated) {
+            parallelActivated = true;
+            ["quality","security","coverage","performance"].forEach(k => agentState(k,"active"));
+          } else if (msg.stage === "security" && msg.message.includes("found")) {
+            ["quality","security","coverage","performance"].forEach(k => agentState(k,"done"));
+          } else if (msg.stage === "deploy") {
+            ["quality","security","coverage","performance"].forEach(k => agentState(k,"done"));
+            agentState("deploy","active");
+          } else if (msg.stage === "done") {
+            agentState("deploy","done");
+          }
+        }
+        else if (msg.type === "result") render(msg.job_id, msg.data);
+        else if (msg.type === "error") showErr(msg.message);
+      };
+      const done = () => { $("run").disabled = false; $("run-label").textContent = "Run pipeline"; $("spinner").classList.add("hidden"); };
+      ws.onclose = done;
+      ws.onerror = () => { showErr("Connection error. Is the server running?"); done(); };
+    }
+    function showErr(m){ $("error").textContent = "Error: " + m; $("error").classList.remove("hidden"); }
+
+    $("run").addEventListener("click", start);
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") hideModal(); });
+  </script>
+</body>
+</html>
