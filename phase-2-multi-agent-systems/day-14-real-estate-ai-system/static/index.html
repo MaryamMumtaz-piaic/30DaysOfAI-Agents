@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Real Estate AI Analyzer · Day 14</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    @keyframes pulse-dot { 0%,100%{opacity:.35} 50%{opacity:1} }
+    .dot { animation: pulse-dot 1.2s ease-in-out infinite; }
+    body { background: linear-gradient(180deg,#f0fdfa 0%,#f8fafc 40%,#ffffff 100%); }
+    .spin { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg) } }
+    @keyframes pop { 0%{transform:scale(.9);opacity:0} 100%{transform:scale(1);opacity:1} }
+    .pop { animation: pop .22s ease-out; }
+    @keyframes rise { 0%{transform:translateY(12px);opacity:0} 100%{transform:translateY(0);opacity:1} }
+    .rise { animation: rise .4s ease-out both; }
+    #map { height: 280px; border-radius: 0.75rem; z-index: 0; }
+  </style>
+</head>
+<body class="h-full min-h-screen text-slate-800 antialiased flex flex-col">
+
+  <!-- Navbar -->
+  <nav class="sticky top-0 z-20 backdrop-blur bg-white/80 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center text-white font-bold shadow-sm">🏠</div>
+        <div class="leading-tight">
+          <p class="font-semibold text-slate-900 text-sm">Real Estate AI Analyzer</p>
+          <p class="text-xs text-teal-600 font-medium">This is Day #14 of our 30 Days AI Agent Challenge</p>
+        </div>
+      </div>
+      <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 border border-teal-200 text-teal-700 text-xs font-semibold">
+        <span class="w-2 h-2 rounded-full bg-teal-500 dot"></span> Day 14 / 30
+      </span>
+    </div>
+  </nav>
+
+  <main class="flex-1">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+
+      <!-- Hero -->
+      <header class="text-center mb-6">
+        <h1 class="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
+          AI Real Estate Investment Analyzer
+        </h1>
+        <p class="mt-3 text-slate-500 max-w-2xl mx-auto">
+          Enter a property address and budget. Five agents value the property, project rental income,
+          score the neighborhood, run the ROI numbers, and deliver an investment verdict — with a live map.
+        </p>
+        <div class="mt-4 flex flex-wrap justify-center gap-2 text-xs">
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">💵 Valuation</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">🏘️ Rental income</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">📍 Neighborhood</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">📊 ROI & cap rate</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">📝 Verdict</span>
+        </div>
+      </header>
+
+      <!-- Input card -->
+      <section class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">Property address</label>
+        <input id="address" type="text" autocomplete="off"
+          placeholder="e.g. 1600 Pennsylvania Ave NW, Washington, DC"
+          class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white" />
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">Budget ($)</label>
+            <input id="budget" type="number" min="0" placeholder="450000" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">Beds</label>
+            <input id="beds" type="number" min="0" value="3" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">Baths</label>
+            <input id="baths" type="number" min="0" step="0.5" value="2" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">Sqft</label>
+            <input id="sqft" type="number" min="1" value="1500" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white" />
+          </div>
+          <div class="col-span-2">
+            <label class="block text-xs font-medium text-slate-500 mb-1">Type</label>
+            <select id="ptype" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white">
+              <option>single-family home</option>
+              <option>condo</option>
+              <option>townhouse</option>
+              <option>multi-family</option>
+              <option>duplex</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex items-center justify-between mt-4 gap-3 flex-wrap">
+          <button id="sample" class="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 text-sm font-medium">Load example</button>
+          <button id="run" class="px-6 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold shadow-sm inline-flex items-center gap-2">
+            <span id="run-label">Analyze property</span>
+            <svg id="spinner" class="hidden spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-opacity=".3"/><path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3"/></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- Progress -->
+      <section id="progress" class="hidden mt-6 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <h2 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-cyan-500 dot"></span> Agents running
+        </h2>
+        <div id="agents" class="grid sm:grid-cols-2 lg:grid-cols-5 gap-2 mb-4"></div>
+        <ul id="log" class="space-y-1.5 text-sm text-slate-600 font-mono max-h-56 overflow-auto"></ul>
+      </section>
+
+      <!-- Error -->
+      <div id="error" class="hidden mt-6 bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm"></div>
+
+      <!-- Results -->
+      <section id="results" class="hidden mt-6 space-y-6"></section>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-200 bg-white/70">
+    <div class="max-w-7xl mx-auto px-4 py-5 text-center text-sm text-slate-500">
+      Made by <span class="font-semibold text-teal-600">Maryam Mumtaz</span>
+      <span class="mx-1.5 text-slate-300">·</span>
+      AI Engineer &amp; Founder, Marsa Empower
+    </div>
+  </footer>
+
+  <!-- Success popup -->
+  <div id="modal" class="hidden fixed inset-0 z-40 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+    <div class="pop bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
+      <div id="modal-icon" class="mx-auto w-14 h-14 rounded-full bg-teal-100 flex items-center justify-center text-2xl">🏠</div>
+      <h3 id="modal-title" class="mt-4 text-lg font-bold text-slate-900">Analysis ready!</h3>
+      <p id="modal-sub" class="mt-1 text-sm text-slate-500">Your investment report is complete.</p>
+      <div class="mt-5 flex gap-2">
+        <button id="modal-close" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 text-sm font-medium">View report</button>
+        <a id="modal-download" href="#" class="flex-1 px-4 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold inline-flex items-center justify-center gap-1.5">
+          ⬇ Download PDF
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let data = null, currentJob = null, map = null, radarChart = null, cfChart = null;
+
+    const AGENTS = [
+      ["valuation", "Market Valuation", "💵"],
+      ["rental", "Rental Projection", "🏘️"],
+      ["neighborhood", "Neighborhood", "📍"],
+      ["roi", "ROI Calculator", "📊"],
+      ["report", "Report Writer", "📝"],
+    ];
+
+    function esc(s){ const d=document.createElement("div"); d.textContent=s??""; return d.innerHTML; }
+    function money(v){ v=Number(v)||0; const neg=v<0, n=Math.abs(v); let s;
+      if(n>=1e6)s="$"+(n/1e6).toFixed(2)+"M"; else if(n>=1e3)s="$"+(n/1e3).toFixed(0)+"K"; else s="$"+n.toFixed(0);
+      return (neg?"-":"")+s; }
+    function log(stage, msg) {
+      const li = document.createElement("li");
+      li.innerHTML = `<span class="text-teal-600 font-semibold">[${stage}]</span> ${esc(msg)}`;
+      $("log").appendChild(li); $("log").scrollTop = $("log").scrollHeight;
+    }
+
+    function renderAgents() {
+      $("agents").innerHTML = AGENTS.map(([key,name,icon]) => `
+        <div id="agent-${key}" class="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-500 transition">
+          <span class="text-base">${icon}</span><span class="flex-1 font-medium">${name}</span>
+          <span data-state="${key}" class="text-slate-300">•</span></div>`).join("");
+    }
+    function agentState(key, state) {
+      const el = $(`agent-${key}`); if (!el) return;
+      const badge = el.querySelector(`[data-state="${key}"]`);
+      if (state === "active") {
+        el.className = "flex items-center gap-2 px-3 py-2 rounded-xl border border-teal-300 bg-teal-50 text-sm text-teal-700 transition";
+        badge.innerHTML = '<svg class="spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-opacity=".3"/><path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3"/></svg>';
+      } else if (state === "done") {
+        el.className = "flex items-center gap-2 px-3 py-2 rounded-xl border border-cyan-200 bg-cyan-50 text-sm text-cyan-700 transition";
+        badge.innerHTML = "✓";
+      }
+    }
+
+    $("sample").addEventListener("click", () => {
+      $("address").value = "742 Evergreen Terrace, Springfield, IL";
+      $("budget").value = 320000; $("beds").value = 4; $("baths").value = 2;
+      $("sqft").value = 2100; $("ptype").value = "single-family home";
+    });
+
+    const REC = {
+      "STRONG BUY": ["text-emerald-700","bg-emerald-50 border-emerald-200","🟢"],
+      "BUY": ["text-emerald-600","bg-emerald-50 border-emerald-200","✅"],
+      "HOLD": ["text-amber-600","bg-amber-50 border-amber-200","⏸️"],
+      "PASS": ["text-red-600","bg-red-50 border-red-200","🛑"],
+    };
+    const TREND = { rising:"text-emerald-600", stable:"text-slate-500", cooling:"text-red-600" };
+    const NB_LABELS = { safety:"Safety", schools:"Schools", amenities:"Amenities", transit:"Transit",
+      walkability:"Walkability", employment:"Employment", affordability:"Affordability", growth:"Growth" };
+
+    function statCard(label, val, cls) {
+      return `<div class="rise bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+        <p class="text-xs font-medium text-slate-400 uppercase tracking-wide">${label}</p>
+        <p class="mt-1 text-lg font-bold ${cls}">${esc(val)}</p></div>`;
+    }
+
+    function render(job_id, d) {
+      data = d; currentJob = job_id;
+      const p = d.property||{}, v = d.valuation||{}, rl = d.rental||{}, nb = d.neighborhood||{}, roi = d.roi||{}, rep = d.report||{}, s = d.stats||{};
+      const rec = rep.recommendation || "HOLD";
+      const [recCls, recChip, recIcon] = REC[rec] || REC.HOLD;
+      const cf = roi.monthly_cash_flow||0;
+
+      const listBlock = (label, items, cls) => {
+        items = (items||[]).filter(Boolean);
+        if (!items.length) return "";
+        return `<div><p class="text-xs font-semibold uppercase tracking-wide ${cls} mb-1.5">${label}</p>
+          <ul class="space-y-1 text-sm text-slate-600">${items.map(x=>`<li>• ${esc(x)}</li>`).join("")}</ul></div>`;
+      };
+
+      const comps = (v.comparables||[]).map(c => `<tr class="border-b border-slate-100">
+        <td class="py-2 text-slate-700">${esc(c.desc)}</td>
+        <td class="py-2 text-center">${money(c.price)}</td>
+        <td class="py-2 text-center">${c.sqft||"—"}</td>
+        <td class="py-2 text-center text-slate-500">${c.sqft?money(Math.round(c.price/c.sqft)):"—"}</td></tr>`).join("");
+
+      const roiRow = (a,b,c,d2) => `<div class="flex justify-between py-1.5 border-b border-slate-100">
+        <span class="text-slate-500">${a}</span><span class="font-semibold">${b}</span></div>
+        <div class="flex justify-between py-1.5 border-b border-slate-100">
+        <span class="text-slate-500">${c}</span><span class="font-semibold">${d2}</span></div>`;
+
+      $("results").innerHTML = `
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+          <div><h2 class="text-xl font-bold text-slate-900">${esc(p.address||"Property")}</h2>
+          <p class="text-sm text-slate-500">${p.beds}bd / ${p.baths}ba · ${p.sqft} sqft · ${esc(p.property_type||"")}</p></div>
+          <a href="/report/${job_id}.pdf" class="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold shadow-sm inline-flex items-center gap-1.5">⬇ Download report (PDF)</a>
+        </div>
+
+        <!-- Verdict -->
+        <div class="rounded-2xl border ${recChip} p-5 flex flex-col sm:flex-row items-center gap-5">
+          <div class="text-center shrink-0">
+            <div class="text-4xl">${recIcon}</div>
+            <div class="mt-1 text-lg font-bold ${recCls}">${esc(rec)}</div>
+            <div class="text-2xl font-extrabold text-slate-900 mt-1">${rep.deal_score||0}<span class="text-sm text-slate-400">/100</span></div>
+          </div>
+          <div class="flex-1">
+            <p class="text-sm text-slate-700">${esc(rep.thesis||"")}</p>
+            <div class="grid sm:grid-cols-2 gap-4 mt-3">
+              ${listBlock("Pros", rep.pros, "text-emerald-600")}
+              ${listBlock("Cons", rep.cons, "text-red-600")}
+            </div>
+            ${rep.best_strategy?`<p class="mt-3 text-sm text-slate-600"><span class="font-semibold text-teal-700">Best strategy:</span> ${esc(rep.best_strategy)}</p>`:""}
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          ${statCard("Est. value", money(s.estimated_value), "text-teal-600")}
+          ${statCard("Cash flow/mo", money(cf), cf>=0?"text-emerald-600":"text-red-600")}
+          ${statCard("Cap rate", (s.cap_rate_pct||0)+"%", "text-cyan-600")}
+          ${statCard("Cash-on-cash", (s.cash_on_cash_pct||0)+"%", "text-cyan-600")}
+          ${statCard("Neighborhood", (s.neighborhood_score||0)+"/100", "text-amber-600")}
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-6">
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="font-semibold text-slate-800 mb-3">📍 Location</h3>
+            <div id="map"></div>
+            <p class="text-xs text-slate-400 mt-2">${esc((d.property.geo&&d.property.geo.display_name)||p.address)}</p>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="font-semibold text-slate-800 mb-3">🏘️ Neighborhood Scores</h3>
+            <canvas id="radar" height="240"></canvas>
+          </div>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-6">
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="font-semibold text-slate-800 mb-2">💵 Market Valuation</h3>
+            <p class="text-sm text-slate-500 mb-3">Trend: <b class="${TREND[v.market_trend]||"text-slate-500"}">${esc(v.market_trend||"—")}</b> (${v.yoy_change_pct||0}% YoY) · ${money(v.price_per_sqft)}/sqft · confidence ${esc(v.confidence||"—")}</p>
+            <p class="text-sm text-slate-600 mb-3">${esc(v.notes||"")}</p>
+            <table class="w-full text-sm"><thead><tr class="text-left text-xs text-slate-400 uppercase border-b border-slate-200">
+              <th class="py-1">Comparable</th><th class="py-1 text-center">Price</th><th class="py-1 text-center">Sqft</th><th class="py-1 text-center">$/sqft</th></tr></thead>
+              <tbody>${comps||'<tr><td class="py-2 text-slate-400" colspan="4">No comparables.</td></tr>'}</tbody></table>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="font-semibold text-slate-800 mb-3">📊 ROI Breakdown</h3>
+            <div class="text-sm">
+              ${roiRow("Purchase price", money(roi.purchase_price), "Down payment", money(roi.down_payment))}
+              ${roiRow("Gross rent/mo", money(roi.gross_monthly_rent), "Mortgage/mo", money(roi.mortgage_monthly))}
+              ${roiRow("NOI (annual)", money(roi.noi_annual), "Op. exp/yr", money(roi.operating_expenses_annual))}
+              ${roiRow("Cap rate", (roi.cap_rate_pct||0)+"%", "Cash-on-cash", (roi.cash_on_cash_pct||0)+"%")}
+            </div>
+            <canvas id="cf" height="150" class="mt-4"></canvas>
+          </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+          <h3 class="font-semibold text-slate-800 mb-3">🏘️ Rental Strategy</h3>
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div class="rounded-xl border ${rl.recommended_strategy==="long-term"?"border-teal-300 bg-teal-50":"border-slate-200"} p-4">
+              <div class="flex items-center justify-between"><p class="font-medium text-slate-800">Long-term lease</p>${rl.recommended_strategy==="long-term"?'<span class="text-[10px] font-bold text-teal-600">RECOMMENDED</span>':""}</div>
+              <p class="text-2xl font-bold text-teal-600 mt-1">${money(rl.long_term_monthly)}<span class="text-sm text-slate-400">/mo</span></p>
+            </div>
+            <div class="rounded-xl border ${rl.recommended_strategy==="short-term"?"border-teal-300 bg-teal-50":"border-slate-200"} p-4">
+              <div class="flex items-center justify-between"><p class="font-medium text-slate-800">Short-term (Airbnb)</p>${rl.recommended_strategy==="short-term"?'<span class="text-[10px] font-bold text-teal-600">RECOMMENDED</span>':""}</div>
+              <p class="text-2xl font-bold text-cyan-600 mt-1">${money(rl.short_term_monthly)}<span class="text-sm text-slate-400">/mo</span></p>
+              <p class="text-xs text-slate-400 mt-1">${money(rl.short_term_nightly)}/night · ${rl.short_term_occupancy_pct||0}% occupancy</p>
+            </div>
+          </div>
+          <p class="text-sm text-slate-500 mt-3">${esc(rl.notes||"")}</p>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+          <h3 class="font-semibold text-slate-800 mb-1">📍 Neighborhood Analysis</h3>
+          <p class="text-sm text-slate-500 mb-3">${esc(nb.summary||"")}</p>
+          <div class="grid sm:grid-cols-2 gap-4">${listBlock("Highlights", nb.highlights, "text-emerald-600")}${listBlock("Concerns", nb.concerns, "text-red-600")}</div>
+        </div>
+
+        <div class="text-xs text-slate-400 text-center">Figures are AI estimates using standard financing assumptions (25% down, 7%/30yr). Verify with local comps before investing.</div>`;
+      $("results").classList.remove("hidden");
+
+      buildMap(d.property.geo, p.address, rec);
+      buildRadar(nb.scores||{});
+      buildCashflow(roi);
+      showModal(job_id, d);
+    }
+
+    function buildMap(geo, address, rec) {
+      const el = $("map"); if (!el) return;
+      if (map) { map.remove(); map = null; }
+      if (!geo || geo.lat == null) { el.innerHTML = '<div class="h-full flex items-center justify-center text-sm text-slate-400 bg-slate-50 rounded-xl">Location could not be mapped.</div>'; return; }
+      map = L.map(el).setView([geo.lat, geo.lon], 14);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19, attribution: "© OpenStreetMap"
+      }).addTo(map);
+      L.marker([geo.lat, geo.lon]).addTo(map).bindPopup(`<b>${esc(rec)}</b><br>${esc(address)}`).openPopup();
+      setTimeout(() => map.invalidateSize(), 200);
+    }
+
+    function buildRadar(scores) {
+      const ctx = $("radar"); if (!ctx) return;
+      if (radarChart) radarChart.destroy();
+      const keys = Object.keys(NB_LABELS);
+      radarChart = new Chart(ctx, {
+        type:"radar",
+        data:{ labels: keys.map(k=>NB_LABELS[k]), datasets:[{ label:"Score",
+          data: keys.map(k=>scores[k]||0), backgroundColor:"rgba(13,148,136,.2)",
+          borderColor:"#0d9488", pointBackgroundColor:"#0d9488", borderWidth:2 }]},
+        options:{ responsive:true, maintainAspectRatio:true,
+          scales:{ r:{ suggestedMin:0, suggestedMax:100, ticks:{stepSize:20, font:{size:9}}, pointLabels:{font:{size:10}} } },
+          plugins:{ legend:{display:false} } },
+      });
+    }
+
+    function buildCashflow(roi) {
+      const ctx = $("cf"); if (!ctx) return;
+      if (cfChart) cfChart.destroy();
+      const gross = roi.gross_monthly_rent||0;
+      const opex = (roi.operating_expenses_annual||0)/12;
+      const mort = roi.mortgage_monthly||0;
+      const cf = roi.monthly_cash_flow||0;
+      cfChart = new Chart(ctx, {
+        type:"bar",
+        data:{ labels:["Gross rent","Op. expenses","Mortgage","Cash flow"], datasets:[{ label:"$/mo",
+          data:[gross, -opex, -mort, cf],
+          backgroundColor:["#0d9488","#f59e0b","#6366f1", cf>=0?"#16a34a":"#dc2626"], borderRadius:6 }]},
+        options:{ responsive:true, maintainAspectRatio:true,
+          plugins:{ legend:{display:false}, tooltip:{callbacks:{label:(c)=>money(c.parsed.y)+"/mo"}} },
+          scales:{ y:{ ticks:{ callback:(v)=>money(v), font:{size:9} } }, x:{ ticks:{font:{size:10}} } } },
+      });
+    }
+
+    function showModal(job_id, d) {
+      const rep = d.report||{}, rec = rep.recommendation||"HOLD";
+      const icons = {"STRONG BUY":"🟢","BUY":"✅","HOLD":"⏸️","PASS":"🛑"};
+      $("modal-icon").textContent = icons[rec] || "🏠";
+      $("modal-title").textContent = rec + " · " + (rep.deal_score||0) + "/100";
+      $("modal-sub").textContent = `Cash flow ${money(d.stats?.monthly_cash_flow)}/mo · cap rate ${d.stats?.cap_rate_pct||0}% · neighborhood ${d.stats?.neighborhood_score||0}/100.`;
+      $("modal-download").href = `/report/${job_id}.pdf`;
+      $("modal").classList.remove("hidden");
+    }
+    function hideModal(){ $("modal").classList.add("hidden"); }
+    $("modal-close").addEventListener("click", () => { hideModal(); $("results").scrollIntoView({behavior:"smooth"}); });
+    $("modal").addEventListener("click", (e) => { if (e.target === $("modal")) hideModal(); });
+    $("modal-download").addEventListener("click", hideModal);
+
+    function start() {
+      const address = $("address").value.trim();
+      if (address.length < 5) { showErr("Enter a property address."); $("address").focus(); return; }
+
+      $("run").disabled = true; $("run-label").textContent = "Analyzing";
+      $("spinner").classList.remove("hidden");
+      $("error").classList.add("hidden"); $("results").classList.add("hidden");
+      $("log").innerHTML = ""; $("progress").classList.remove("hidden");
+      renderAgents();
+
+      const payload = {
+        address, budget: parseFloat($("budget").value)||0,
+        beds: parseInt($("beds").value)||3, baths: parseFloat($("baths").value)||2,
+        sqft: parseInt($("sqft").value)||1500, property_type: $("ptype").value,
+      };
+      const proto = location.protocol === "https:" ? "wss" : "ws";
+      const ws = new WebSocket(`${proto}://${location.host}/ws/analyze`);
+      ws.onopen = () => ws.send(JSON.stringify(payload));
+      let parallelDone = false;
+      ws.onmessage = (ev) => {
+        const m = JSON.parse(ev.data);
+        if (m.type === "progress") {
+          log(m.stage, m.message);
+          if (m.stage === "valuation" && m.message.includes("running")) {
+            ["valuation","rental","neighborhood"].forEach(k=>agentState(k,"active"));
+          } else if (m.stage === "roi") {
+            ["valuation","rental","neighborhood"].forEach(k=>agentState(k,"done")); agentState("roi","active");
+          } else if (m.stage === "report") {
+            agentState("roi","done"); agentState("report","active");
+          } else if (m.stage === "done") {
+            agentState("report","done");
+          }
+        }
+        else if (m.type === "result") render(m.job_id, m.data);
+        else if (m.type === "error") showErr(m.message);
+      };
+      const done = () => { $("run").disabled = false; $("run-label").textContent = "Analyze property"; $("spinner").classList.add("hidden"); };
+      ws.onclose = done;
+      ws.onerror = () => { showErr("Connection error. Is the server running?"); done(); };
+    }
+    function showErr(m){ $("error").textContent = "Error: " + m; $("error").classList.remove("hidden"); }
+
+    $("run").addEventListener("click", start);
+    $("address").addEventListener("keydown", (e) => { if (e.key === "Enter") start(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") hideModal(); });
+  </script>
+</body>
+</html>
