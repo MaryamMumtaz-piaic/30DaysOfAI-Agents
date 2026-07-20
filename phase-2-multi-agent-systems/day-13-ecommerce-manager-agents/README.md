@@ -7,19 +7,21 @@
 
 ## 📖 Overview
 
-A fully autonomous e-commerce management system with 5 agents: **Inventory Monitor** (stock alerts + reorder logic), **Dynamic Pricing Agent** (competitor-based repricing), **Customer Review Analyst** (sentiment + response drafting), **Ad Copy Generator** (platform-specific creatives), and **Sales Forecaster** (demand prediction). Full admin dashboard with real-time metrics.
+Enter your product catalog (stock, price, cost, competitor price, weekly sales, reviews) and five agents run the store: **Inventory Monitor** (stock health + reorder quantities), **Dynamic Pricing Agent** (competitor-aware, margin-protecting repricing), **Sales Forecaster** (trend-based demand + revenue projection), **Customer Review Analyst** (sentiment + drafted replies), and **Ad Copy Generator** (Google/Meta/Amazon creatives). The three numeric agents run deterministically for reproducible figures; the two language agents run concurrently. Progress streams live over a WebSocket and the full dashboard exports to PDF.
 
 ## ✨ Key Features
 
-- Real-time inventory monitoring with auto-reorder triggers
-- Dynamic pricing based on live competitor scraping
-- Automated customer review sentiment responses
-- Multi-platform ad copy generation (Google, Meta, Amazon)
-- ML-based sales forecasting with trend analysis
+- Editable catalog dashboard — no database setup required
+- Inventory monitoring with status tiers and auto-computed reorder quantities
+- Dynamic pricing with a margin floor and competitor undercut logic
+- Trend-aware sales forecast with per-product revenue projection
+- AI review sentiment analysis with ready-to-post reply drafts
+- Multi-platform ad copy (Google, Meta, Amazon)
+- Live agent progress and one-click PDF operations report
 
 ## 🛠️ Tech Stack
 
-Python · LangGraph · OpenAI SDK · FastAPI · HTML · Tailwind CSS · Chart.js · JavaScript · SQLite
+Python · OpenAI SDK · FastAPI · WebSockets · HTML · Tailwind CSS · Chart.js · ReportLab
 
 ## ⚙️ Setup
 
@@ -34,7 +36,7 @@ uvicorn main:app --reload
 
 ## 📌 Status
 
-🚧 In development
+✅ Complete
 
 ---
 

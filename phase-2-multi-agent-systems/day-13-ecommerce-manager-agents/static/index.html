@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>E-Commerce Manager · Day 13</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    @keyframes pulse-dot { 0%,100%{opacity:.35} 50%{opacity:1} }
+    .dot { animation: pulse-dot 1.2s ease-in-out infinite; }
+    body { background: linear-gradient(180deg,#ecfdf5 0%,#f8fafc 40%,#ffffff 100%); }
+    .spin { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg) } }
+    @keyframes pop { 0%{transform:scale(.9);opacity:0} 100%{transform:scale(1);opacity:1} }
+    .pop { animation: pop .22s ease-out; }
+    @keyframes rise { 0%{transform:translateY(12px);opacity:0} 100%{transform:translateY(0);opacity:1} }
+    .rise { animation: rise .4s ease-out both; }
+    .tab-active { background:#059669; color:#fff; }
+    table input { width:100%; background:transparent; }
+    table input:focus { outline:none; background:#fff; }
+  </style>
+</head>
+<body class="h-full min-h-screen text-slate-800 antialiased flex flex-col">
+
+  <!-- Navbar -->
+  <nav class="sticky top-0 z-20 backdrop-blur bg-white/80 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white font-bold shadow-sm">🛒</div>
+        <div class="leading-tight">
+          <p class="font-semibold text-slate-900 text-sm">E-Commerce Ops Manager</p>
+          <p class="text-xs text-emerald-600 font-medium">This is Day #13 of our 30 Days AI Agent Challenge</p>
+        </div>
+      </div>
+      <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 dot"></span> Day 13 / 30
+      </span>
+    </div>
+  </nav>
+
+  <main class="flex-1">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+
+      <!-- Hero -->
+      <header class="text-center mb-6">
+        <h1 class="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+          Autonomous E-Commerce Operations Manager
+        </h1>
+        <p class="mt-3 text-slate-500 max-w-2xl mx-auto">
+          Enter your product catalog. Five agents run your store — monitoring inventory, repricing
+          against competitors, forecasting demand, analyzing reviews, and writing ad copy — then hand
+          you a full operations report.
+        </p>
+        <div class="mt-4 flex flex-wrap justify-center gap-2 text-xs">
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">📦 Inventory</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">🏷️ Pricing</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">📈 Forecast</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">⭐ Reviews</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">📣 Ad copy</span>
+        </div>
+      </header>
+
+      <!-- Catalog editor -->
+      <section class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <h2 class="font-semibold text-slate-800">Product Catalog</h2>
+          <div class="flex gap-2">
+            <button id="sample" class="px-3 py-1.5 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-50 text-sm font-medium">Load sample store</button>
+            <button id="add-row" class="px-3 py-1.5 rounded-lg border border-emerald-300 text-emerald-700 hover:bg-emerald-50 text-sm font-medium">+ Add product</button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm border-collapse min-w-[900px]">
+            <thead>
+              <tr class="text-left text-xs text-slate-400 uppercase tracking-wide border-b border-slate-200">
+                <th class="py-2 pr-2">Name</th>
+                <th class="py-2 px-2 w-20">Stock</th>
+                <th class="py-2 px-2 w-24">Reorder pt</th>
+                <th class="py-2 px-2 w-24">Price</th>
+                <th class="py-2 px-2 w-24">Cost</th>
+                <th class="py-2 px-2 w-28">Comp. price</th>
+                <th class="py-2 px-2">Weekly sales (comma)</th>
+                <th class="py-2 px-2">Reviews (one per line)</th>
+                <th class="py-2 w-8"></th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+        <div class="flex items-center justify-end mt-4">
+          <button id="run" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow-sm inline-flex items-center gap-2">
+            <span id="run-label">Run all agents</span>
+            <svg id="spinner" class="hidden spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-opacity=".3"/><path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3"/></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- Progress -->
+      <section id="progress" class="hidden mt-6 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <h2 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-teal-500 dot"></span> Agents running
+        </h2>
+        <div id="agents" class="grid sm:grid-cols-2 lg:grid-cols-5 gap-2 mb-4"></div>
+        <ul id="log" class="space-y-1.5 text-sm text-slate-600 font-mono max-h-56 overflow-auto"></ul>
+      </section>
+
+      <!-- Error -->
+      <div id="error" class="hidden mt-6 bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm"></div>
+
+      <!-- Results -->
+      <section id="results" class="hidden mt-6 space-y-6"></section>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-200 bg-white/70">
+    <div class="max-w-7xl mx-auto px-4 py-5 text-center text-sm text-slate-500">
+      Made by <span class="font-semibold text-emerald-600">Maryam Mumtaz</span>
+      <span class="mx-1.5 text-slate-300">·</span>
+      AI Engineer &amp; Founder, Marsa Empower
+    </div>
+  </footer>
+
+  <!-- Success popup -->
+  <div id="modal" class="hidden fixed inset-0 z-40 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+    <div class="pop bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
+      <div class="mx-auto w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center text-2xl">🛒</div>
+      <h3 class="mt-4 text-lg font-bold text-slate-900">Store managed!</h3>
+      <p id="modal-sub" class="mt-1 text-sm text-slate-500">Your operations report is ready.</p>
+      <div class="mt-5 flex gap-2">
+        <button id="modal-close" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 text-sm font-medium">View dashboard</button>
+        <a id="modal-download" href="#" class="flex-1 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold inline-flex items-center justify-center gap-1.5">
+          ⬇ Download PDF
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let data = null, currentJob = null;
+
+    const AGENTS = [
+      ["inventory", "Inventory Monitor", "📦"],
+      ["pricing", "Dynamic Pricing", "🏷️"],
+      ["forecast", "Sales Forecaster", "📈"],
+      ["reviews", "Review Analyst", "⭐"],
+      ["adcopy", "Ad Copy Generator", "📣"],
+    ];
+
+    function esc(s){ const d=document.createElement("div"); d.textContent=s??""; return d.innerHTML; }
+    function money(v){ v=Number(v)||0; const n=Math.abs(v); let s;
+      if(n>=1e6)s="$"+(n/1e6).toFixed(1)+"M"; else if(n>=1e3)s="$"+(n/1e3).toFixed(1)+"K"; else s="$"+n.toFixed(2);
+      return (v<0?"-":"")+s; }
+    function log(stage, msg) {
+      const li = document.createElement("li");
+      li.innerHTML = `<span class="text-emerald-600 font-semibold">[${stage}]</span> ${esc(msg)}`;
+      $("log").appendChild(li); $("log").scrollTop = $("log").scrollHeight;
+    }
+
+    // ---- catalog editor ----
+    function rowHtml(p={}) {
+      p = p||{};
+      return `<tr class="border-b border-slate-100">
+        <td class="py-1 pr-2"><input class="c-name font-medium" value="${esc(p.name||"")}" placeholder="Product name"/></td>
+        <td class="py-1 px-2"><input class="c-stock" type="number" value="${p.stock??""}" /></td>
+        <td class="py-1 px-2"><input class="c-rp" type="number" value="${p.reorder_point??""}" /></td>
+        <td class="py-1 px-2"><input class="c-price" type="number" step="0.01" value="${p.price??""}" /></td>
+        <td class="py-1 px-2"><input class="c-cost" type="number" step="0.01" value="${p.cost??""}" /></td>
+        <td class="py-1 px-2"><input class="c-comp" type="number" step="0.01" value="${p.competitor_price??""}" /></td>
+        <td class="py-1 px-2"><input class="c-hist" value="${esc((p.sales_history||[]).join(", "))}" placeholder="12, 15, 9, 20"/></td>
+        <td class="py-1 px-2"><textarea class="c-rev" rows="1" placeholder="Great product!&#10;Shipping slow" style="width:100%;resize:vertical">${esc((p.reviews||[]).join("\n"))}</textarea></td>
+        <td class="py-1 text-center"><button class="del text-slate-300 hover:text-red-500 font-bold">×</button></td>
+      </tr>`;
+    }
+    function addRow(p) {
+      const tr = document.createElement("tbody");
+      tr.innerHTML = rowHtml(p);
+      const node = tr.firstElementChild;
+      node.querySelector(".del").addEventListener("click", () => node.remove());
+      $("rows").appendChild(node);
+    }
+    function collect() {
+      return [...$("rows").children].map(tr => {
+        const val = (c) => tr.querySelector(c)?.value.trim() ?? "";
+        const nums = (s) => s.split(",").map(x=>parseFloat(x.trim())).filter(x=>!isNaN(x));
+        return {
+          name: val(".c-name"),
+          stock: parseFloat(val(".c-stock"))||0,
+          reorder_point: parseFloat(val(".c-rp"))||0,
+          price: parseFloat(val(".c-price"))||0,
+          cost: parseFloat(val(".c-cost"))||0,
+          competitor_price: parseFloat(val(".c-comp"))||0,
+          sales_history: nums(val(".c-hist")),
+          reviews: val(".c-rev").split("\n").map(x=>x.trim()).filter(Boolean),
+        };
+      }).filter(p => p.name);
+    }
+
+    const SAMPLE = [
+      {name:"Wireless Earbuds Pro", stock:8, reorder_point:15, price:59.99, cost:28, competitor_price:54.99,
+       sales_history:[22,25,20,28,31,35], reviews:["Amazing sound quality!","Battery lasts all day","One earbud stopped working after a month"]},
+      {name:"Bamboo Cutting Board", stock:120, reorder_point:30, price:24.99, cost:9, competitor_price:22.5,
+       sales_history:[10,8,12,9,7,6], reviews:["Sturdy and looks great","A bit smaller than expected"]},
+      {name:"Smart LED Desk Lamp", stock:0, reorder_point:20, price:39.99, cost:18, competitor_price:44.99,
+       sales_history:[15,18,17,21,24,26], reviews:["Love the app control","Perfect for late-night work"]},
+      {name:"Yoga Mat (6mm)", stock:45, reorder_point:25, price:29.99, cost:22, competitor_price:27.99,
+       sales_history:[12,11,13,10,9,8], reviews:["Great grip","Started peeling at the edges"]},
+    ];
+    $("sample").addEventListener("click", () => { $("rows").innerHTML=""; SAMPLE.forEach(addRow); });
+    $("add-row").addEventListener("click", () => addRow());
+
+    function renderAgents() {
+      $("agents").innerHTML = AGENTS.map(([key,name,icon]) => `
+        <div id="agent-${key}" class="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-500 transition">
+          <span class="text-base">${icon}</span><span class="flex-1 font-medium">${name}</span>
+          <span data-state="${key}" class="text-slate-300">•</span></div>`).join("");
+    }
+    function agentState(key, state) {
+      const el = $(`agent-${key}`); if (!el) return;
+      const badge = el.querySelector(`[data-state="${key}"]`);
+      if (state === "active") {
+        el.className = "flex items-center gap-2 px-3 py-2 rounded-xl border border-emerald-300 bg-emerald-50 text-sm text-emerald-700 transition";
+        badge.innerHTML = '<svg class="spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-opacity=".3"/><path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3"/></svg>';
+      } else if (state === "done") {
+        el.className = "flex items-center gap-2 px-3 py-2 rounded-xl border border-teal-200 bg-teal-50 text-sm text-teal-700 transition";
+        badge.innerHTML = "✓";
+      }
+    }
+
+    // ---- rendering ----
+    const STATUS = { out:"bg-red-100 text-red-800 border-red-300", critical:"bg-red-50 text-red-700 border-red-200",
+      low:"bg-amber-50 text-amber-700 border-amber-200", ok:"bg-emerald-50 text-emerald-700 border-emerald-200" };
+    const ACTION = { raise:"text-emerald-700", lower:"text-orange-600", hold:"text-slate-500" };
+    const SENT = { positive:"bg-emerald-50 text-emerald-700 border-emerald-200", mixed:"bg-amber-50 text-amber-700 border-amber-200", negative:"bg-red-50 text-red-700 border-red-200" };
+    const TREND = { up:"▲", down:"▼", flat:"▬" };
+    const TRENDCLS = { up:"text-emerald-600", down:"text-red-600", flat:"text-slate-400" };
+
+    function statCard(label, val, cls) {
+      return `<div class="rise bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+        <p class="text-xs font-medium text-slate-400 uppercase tracking-wide">${label}</p>
+        <p class="mt-1 text-xl font-bold ${cls}">${esc(val)}</p></div>`;
+    }
+    const nameOf = (sku) => (data.products.find(p=>p.sku===sku)||{}).name || sku;
+
+    function render(job_id, d) {
+      data = d; currentJob = job_id;
+      const s = d.stats||{}, inv = d.inventory||{}, pr = d.pricing||{}, fc = d.forecast||{}, rv = d.reviews||{}, ac = d.adcopy||{};
+
+      const invRows = (inv.items||[]).map(it => `<tr class="border-b border-slate-100">
+        <td class="py-2 font-medium text-slate-800">${esc(it.name)}</td>
+        <td class="py-2 text-center">${it.stock}</td>
+        <td class="py-2 text-center">${it.avg_weekly_sales}</td>
+        <td class="py-2 text-center">${it.days_of_stock??"—"}</td>
+        <td class="py-2 text-center"><span class="px-2 py-0.5 rounded border text-xs font-semibold ${STATUS[it.status]}">${it.status}</span></td>
+        <td class="py-2 text-center font-semibold ${it.reorder?"text-emerald-600":"text-slate-300"}">${it.reorder?("+"+it.reorder_qty):"—"}</td></tr>`).join("");
+
+      const prRows = (pr.items||[]).map(it => `<tr class="border-b border-slate-100">
+        <td class="py-2 font-medium text-slate-800">${esc(it.name)}</td>
+        <td class="py-2 text-center">${money(it.price)}</td>
+        <td class="py-2 text-center text-slate-500">${it.competitor_price?money(it.competitor_price):"—"}</td>
+        <td class="py-2 text-center font-semibold">${money(it.suggested_price)} <span class="text-xs ${ACTION[it.action]}">${it.change>0?"+":""}${it.change?money(it.change):""}</span></td>
+        <td class="py-2 text-center text-xs">${it.margin_pct}% → ${it.new_margin_pct}%</td>
+        <td class="py-2 text-xs text-slate-500">${esc(it.reason)}</td></tr>`).join("");
+
+      const fcRows = (fc.items||[]).map(it => `<tr class="border-b border-slate-100">
+        <td class="py-2 font-medium text-slate-800">${esc(it.name)}</td>
+        <td class="py-2 text-center">${it.avg_weekly}</td>
+        <td class="py-2 text-center ${TRENDCLS[it.trend]}">${TREND[it.trend]} ${it.trend}</td>
+        <td class="py-2 text-center font-semibold">${it.forecast_units}</td>
+        <td class="py-2 text-center">${money(it.forecast_revenue)}</td></tr>`).join("");
+
+      const reviewCards = (rv.products||[]).map(it => `
+        <div class="bg-white border border-slate-200 rounded-xl p-4">
+          <div class="flex items-center justify-between gap-2">
+            <p class="text-sm font-semibold text-slate-800">${esc(nameOf(it.sku))}</p>
+            <span class="px-2 py-0.5 rounded border text-[10px] font-semibold ${SENT[it.sentiment]||SENT.mixed}">${esc(it.sentiment)} · ${it.score}</span>
+          </div>
+          ${(it.themes&&it.themes.length)?`<div class="flex flex-wrap gap-1 mt-2">${it.themes.map(t=>`<span class="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">${esc(t)}</span>`).join("")}</div>`:""}
+          ${it.response_draft?`<p class="mt-2 text-xs text-slate-500"><span class="font-medium text-emerald-700">Reply:</span> ${esc(it.response_draft)}</p>`:""}
+        </div>`).join("");
+
+      const adCards = (ac.products||[]).map(it => `
+        <div class="bg-white border border-slate-200 rounded-xl p-4">
+          <p class="text-sm font-semibold text-slate-800 mb-2">${esc(nameOf(it.sku))}</p>
+          <div class="space-y-2">${(it.ads||[]).map(ad=>`
+            <div class="border-l-2 border-emerald-300 pl-3">
+              <div class="flex items-center gap-2"><span class="text-[10px] font-bold uppercase text-emerald-600">${esc(ad.platform)}</span></div>
+              <p class="text-sm font-medium text-slate-800">${esc(ad.headline)}</p>
+              <p class="text-xs text-slate-500">${esc(ad.body)}</p>
+              ${ad.cta?`<p class="text-xs text-emerald-600 mt-0.5">▸ ${esc(ad.cta)}</p>`:""}
+            </div>`).join("")}</div>
+        </div>`).join("");
+
+      $("results").innerHTML = `
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+          <h2 class="text-xl font-bold text-slate-900">Operations Dashboard</h2>
+          <a href="/report/${job_id}.pdf" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow-sm inline-flex items-center gap-1.5">⬇ Download report (PDF)</a>
+        </div>
+
+        <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          ${statCard("Reorder alerts", s.reorder_alerts||0, (s.reorder_alerts?"text-red-600":"text-emerald-600"))}
+          ${statCard("Reprices", s.reprice_count||0, "text-teal-600")}
+          ${statCard("Forecast units", s.forecast_units||0, "text-emerald-600")}
+          ${statCard("Forecast rev.", money(s.forecast_revenue), "text-emerald-600")}
+          ${statCard("Avg review", s.avg_review_score!=null?(s.avg_review_score+"/100"):"—", "text-amber-600")}
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-6">
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="font-semibold text-slate-800 mb-3">📦 Inventory Health</h3>
+            <div class="overflow-x-auto"><table class="w-full text-sm">
+              <thead><tr class="text-left text-xs text-slate-400 uppercase border-b border-slate-200">
+                <th class="py-1">Product</th><th class="py-1 text-center">Stock</th><th class="py-1 text-center">Wk</th><th class="py-1 text-center">Days</th><th class="py-1 text-center">Status</th><th class="py-1 text-center">Reorder</th></tr></thead>
+              <tbody>${invRows}</tbody></table></div>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="font-semibold text-slate-800 mb-3">📈 Forecast by Product</h3>
+            <canvas id="fcChart" height="200"></canvas>
+          </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+          <h3 class="font-semibold text-slate-800 mb-3">🏷️ Dynamic Pricing</h3>
+          <div class="overflow-x-auto"><table class="w-full text-sm">
+            <thead><tr class="text-left text-xs text-slate-400 uppercase border-b border-slate-200">
+              <th class="py-1">Product</th><th class="py-1 text-center">Price</th><th class="py-1 text-center">Comp.</th><th class="py-1 text-center">Suggested</th><th class="py-1 text-center">Margin</th><th class="py-1">Reason</th></tr></thead>
+            <tbody>${prRows}</tbody></table></div>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+          <h3 class="font-semibold text-slate-800 mb-3">📊 Sales Forecast</h3>
+          <div class="overflow-x-auto"><table class="w-full text-sm">
+            <thead><tr class="text-left text-xs text-slate-400 uppercase border-b border-slate-200">
+              <th class="py-1">Product</th><th class="py-1 text-center">Avg/wk</th><th class="py-1 text-center">Trend</th><th class="py-1 text-center">Units</th><th class="py-1 text-center">Revenue</th></tr></thead>
+            <tbody>${fcRows}</tbody></table></div>
+        </div>
+
+        ${reviewCards?`<div><h3 class="font-semibold text-slate-800 mb-3">⭐ Customer Reviews</h3>
+          <p class="text-sm text-slate-500 mb-3">${esc(rv.overall||"")}</p>
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">${reviewCards}</div></div>`:""}
+
+        ${adCards?`<div><h3 class="font-semibold text-slate-800 mb-3">📣 Ad Copy</h3>
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">${adCards}</div></div>`:""}
+
+        <div class="text-xs text-slate-400 text-center">Inventory, pricing and forecast are computed from your figures; reviews and ad copy are AI-generated. Review before acting.</div>`;
+      $("results").classList.remove("hidden");
+
+      buildFcChart(fc);
+      showModal(job_id, s);
+    }
+
+    let fcChart = null;
+    function buildFcChart(fc) {
+      const ctx = $("fcChart"); if (!ctx) return;
+      if (fcChart) fcChart.destroy();
+      const items = (fc.items||[]).slice(0, 8);
+      fcChart = new Chart(ctx, {
+        type:"bar",
+        data:{ labels: items.map(i=>i.name), datasets:[{ label:"Forecast revenue",
+          data: items.map(i=>i.forecast_revenue), backgroundColor:"#059669", borderRadius:6 }]},
+        options:{ indexAxis:"y", responsive:true, maintainAspectRatio:true,
+          plugins:{ legend:{display:false}, tooltip:{callbacks:{label:(c)=>money(c.parsed.x)}} },
+          scales:{ x:{ ticks:{ callback:(v)=>money(v), font:{size:10} } }, y:{ ticks:{font:{size:10}} } } },
+      });
+    }
+
+    function showModal(job_id, s) {
+      $("modal-sub").textContent = `${s.reorder_alerts||0} reorder alerts · ${s.reprice_count||0} reprices · forecast ${money(s.forecast_revenue)}.`;
+      $("modal-download").href = `/report/${job_id}.pdf`;
+      $("modal").classList.remove("hidden");
+    }
+    function hideModal(){ $("modal").classList.add("hidden"); }
+    $("modal-close").addEventListener("click", () => { hideModal(); $("results").scrollIntoView({behavior:"smooth"}); });
+    $("modal").addEventListener("click", (e) => { if (e.target === $("modal")) hideModal(); });
+    $("modal-download").addEventListener("click", hideModal);
+
+    function start() {
+      const catalog = collect();
+      if (!catalog.length) { showErr("Add at least one product (a name is required)."); return; }
+
+      $("run").disabled = true; $("run-label").textContent = "Running";
+      $("spinner").classList.remove("hidden");
+      $("error").classList.add("hidden"); $("results").classList.add("hidden");
+      $("log").innerHTML = ""; $("progress").classList.remove("hidden");
+      renderAgents();
+
+      const proto = location.protocol === "https:" ? "wss" : "ws";
+      const ws = new WebSocket(`${proto}://${location.host}/ws/manage`);
+      ws.onopen = () => ws.send(JSON.stringify({ catalog }));
+      let langActivated = false;
+      ws.onmessage = (ev) => {
+        const m = JSON.parse(ev.data);
+        if (m.type === "progress") {
+          log(m.stage, m.message);
+          if (m.stage === "inventory") agentState("inventory","active");
+          else if (m.stage === "pricing") { agentState("inventory","done"); agentState("pricing","active"); }
+          else if (m.stage === "forecast") { agentState("pricing","done"); agentState("forecast","active"); }
+          else if (m.stage === "reviews" && !langActivated) { langActivated = true; agentState("forecast","done"); agentState("reviews","active"); agentState("adcopy","active"); }
+          else if (m.stage === "adcopy") { agentState("reviews","done"); agentState("adcopy","done"); }
+          else if (m.stage === "done") { agentState("reviews","done"); agentState("adcopy","done"); }
+        }
+        else if (m.type === "result") render(m.job_id, m.data);
+        else if (m.type === "error") showErr(m.message);
+      };
+      const done = () => { $("run").disabled = false; $("run-label").textContent = "Run all agents"; $("spinner").classList.add("hidden"); };
+      ws.onclose = done;
+      ws.onerror = () => { showErr("Connection error. Is the server running?"); done(); };
+    }
+    function showErr(m){ $("error").textContent = "Error: " + m; $("error").classList.remove("hidden"); }
+
+    $("run").addEventListener("click", start);
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") hideModal(); });
+
+    // seed with the sample store
+    SAMPLE.forEach(addRow);
+  </script>
+</body>
+</html>
