@@ -15,15 +15,29 @@ Connect your Gmail inbox. The agent reads all unread emails, categorizes them by
 - Spam & phishing detection
 - Priority scoring (0–100) with action-required flags
 - AI-drafted personalized replies with tone matching
-- Approve / edit / send workflow per email
+- Approve / edit / **regenerate** / send workflow per email
+- **Real Gmail connection** via IMAP (read unread) + SMTP (send replies)
 - Category-breakdown and priority charts + downloadable PDF report
-- Built-in demo inbox (no Gmail OAuth required) plus manual paste-in
+- Built-in demo inbox (no Gmail login required) plus manual paste-in
 
 ## 🛠️ Tech Stack
 
-Python · OpenAI GPT-4o-mini · FastAPI · WebSockets · ReportLab · HTML · Tailwind CSS · Chart.js · JavaScript
+Python · OpenAI GPT-4o-mini · FastAPI · WebSockets · IMAP/SMTP · ReportLab · HTML · Tailwind CSS · Chart.js · JavaScript
 
-> Ships with a sample inbox so you can try it with only an OpenAI key. Swap `sample_inbox.py` / the `/send` route for the Gmail API + OAuth2 to run against a real mailbox.
+## 📧 Connect a real Gmail inbox
+
+Click **Connect Gmail** in the UI and enter your address + a Gmail **App Password**
+(not your normal password). Replies you approve are delivered for real via SMTP.
+
+To create an App Password:
+
+1. Turn on **2-Step Verification** at <https://myaccount.google.com/security>.
+2. Open <https://myaccount.google.com/apppasswords>, name it (e.g. "Triage Agent"), and copy the 16-character code.
+3. Paste your Gmail address and that code into the Connect dialog.
+
+> Credentials are used only for the current session — they are sent to the local
+> server to read/send your mail and are never written to disk. Prefer the sample
+> inbox for a quick demo with just an OpenAI key.
 
 ## ⚙️ Setup
 

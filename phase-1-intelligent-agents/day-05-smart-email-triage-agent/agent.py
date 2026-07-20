@@ -64,6 +64,8 @@ class EmailTriageAgent:
             r["from"] = email.get("from", "")
             r["subject"] = email.get("subject", "")
             r["received"] = email.get("received", "")
+            r["message_id"] = email.get("message_id", "")
+            r["body"] = email.get("body", "")
             results[idx] = r
             async with lock:
                 done += 1
@@ -137,6 +139,27 @@ class EmailTriageAgent:
         if not data["reply_needed"]:
             data["draft_reply"] = data.get("draft_reply") or ""
         return data
+
+    async def draft_reply(self, email: dict, user_name: str = "", tone: str = "") -> str:
+        """Generate a fresh reply draft for a single email (used by 'Regenerate')."""
+        subject = (email.get("subject") or "").strip()
+        sender = (email.get("from") or "").strip()
+        body = (email.get("body") or "").strip()[:MAX_BODY_CHARS]
+
+        sig = f"Sign the reply as {user_name}." if user_name else ""
+        tone_note = f"Write it in a {tone} tone. " if tone else ""
+        prompt = (
+            "You are an executive assistant. Write a complete, ready-to-send reply "
+            "to the email below. Match the sender's tone and keep it concise and professional. "
+            f"{tone_note}{sig} Return ONLY the reply text, no preamble.\n\n"
+            f"From: {sender}\nSubject: {subject}\n\nBody:\n{body}"
+        )
+        resp = await self.openai.chat.completions.create(
+            model=MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7,
+        )
+        return (resp.choices[0].message.content or "").strip()
 
     def _summarize(self, triaged: list[dict]) -> dict:
         by_category: dict[str, int] = {}
