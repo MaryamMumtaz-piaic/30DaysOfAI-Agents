@@ -7,20 +7,22 @@
 
 ## 📖 Overview
 
-A 6-agent startup validation system. Input your startup idea and receive a complete venture-capital-style analysis. Agents: **Market Researcher** (TAM/SAM/SOM), **Competitor Scout** (existing solutions), **Financial Modeler** (revenue projections), **Risk Analyst** (PESTLE), **Pitch Writer** (investor pitch), and **Go/No-Go Scorer**. Generates a full 20-page startup validation report with investor-ready pitch deck.
+A 6-agent startup validation crew. Enter your startup idea and receive a complete venture-capital-style diligence packet. The agents run in sequence, each building on the prior one's output: **Market Researcher** (TAM/SAM/SOM), **Competitor Scout** (existing solutions), **Financial Modeler** (3-year projection), **Risk Analyst** (PESTLE), **Pitch Writer** (investor pitch + deck outline), and **Go/No-Go Scorer** (weighted 0-100 verdict). Progress streams live over a WebSocket, and the full report exports to PDF.
 
 ## ✨ Key Features
 
-- 6 specialized CrewAI agents with distinct expert roles
-- Real market data via live web scraping
-- Full financial projection modeling (3-year forecast)
-- PESTLE risk framework analysis
-- Investor-ready pitch deck generation in PDF
-- Final go/no-go investment score with rationale
+- 6 specialized agents with distinct expert roles, chained so context compounds
+- Live crew progress streamed over WebSocket (each agent lights up as it runs)
+- TAM / SAM / SOM market sizing with a bar chart
+- 3-year revenue / cost / profit projection with a combo chart
+- PESTLE risk framework with severity-scored mitigations
+- Investor-ready elevator pitch and deck outline
+- Weighted go / no-go verdict with a scorecard and rationale
+- One-click investor-ready PDF export
 
 ## 🛠️ Tech Stack
 
-Python · CrewAI · LangChain · OpenAI SDK · FastAPI · HTML · Tailwind CSS · Playwright · ReportLab
+Python · OpenAI SDK · FastAPI · WebSockets · HTML · Tailwind CSS · Chart.js · ReportLab
 
 ## ⚙️ Setup
 
@@ -35,7 +37,7 @@ uvicorn main:app --reload
 
 ## 📌 Status
 
-🚧 In development
+✅ Complete
 
 ---
 

@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Startup Validator Crew · Day 11</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    @keyframes pulse-dot { 0%,100%{opacity:.35} 50%{opacity:1} }
+    .dot { animation: pulse-dot 1.2s ease-in-out infinite; }
+    body { background: linear-gradient(180deg,#f5f3ff 0%,#f8fafc 40%,#ffffff 100%); }
+    .spin { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg) } }
+    @keyframes pop { 0%{transform:scale(.9);opacity:0} 100%{transform:scale(1);opacity:1} }
+    .pop { animation: pop .22s ease-out; }
+    @keyframes rise { 0%{transform:translateY(12px);opacity:0} 100%{transform:translateY(0);opacity:1} }
+    .rise { animation: rise .4s ease-out both; }
+  </style>
+</head>
+<body class="h-full min-h-screen text-slate-800 antialiased flex flex-col">
+
+  <!-- Navbar -->
+  <nav class="sticky top-0 z-20 backdrop-blur bg-white/80 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-white font-bold shadow-sm">🚀</div>
+        <div class="leading-tight">
+          <p class="font-semibold text-slate-900 text-sm">Startup Validator Crew</p>
+          <p class="text-xs text-violet-600 font-medium">This is Day #11 of our 30 Days AI Agent Challenge</p>
+        </div>
+      </div>
+      <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-50 border border-violet-200 text-violet-700 text-xs font-semibold">
+        <span class="w-2 h-2 rounded-full bg-violet-500 dot"></span> Day 11 / 30
+      </span>
+    </div>
+  </nav>
+
+  <main class="flex-1">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+
+      <!-- Hero -->
+      <header class="text-center mb-6">
+        <h1 class="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
+          AI Startup Validator Crew
+        </h1>
+        <p class="mt-3 text-slate-500 max-w-2xl mx-auto">
+          Describe your startup in one sentence. Six specialized AI agents run venture-style
+          diligence — market sizing, competitor scouting, financial modeling, PESTLE risk, an
+          investor pitch, and a final go / no-go verdict.
+        </p>
+        <div class="mt-4 flex flex-wrap justify-center gap-2 text-xs">
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">📊 Market sizing</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">🔍 Competitor scout</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">💰 Financial model</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">⚠️ PESTLE risk</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">🎯 Go/No-Go</span>
+        </div>
+      </header>
+
+      <!-- Input card -->
+      <section class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <label class="block text-sm font-medium text-slate-700 mb-1.5">Startup idea</label>
+        <input id="idea" type="text" autocomplete="off"
+          placeholder="e.g. An AI meal planner that auto-orders groceries for busy families"
+          class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:bg-white" />
+        <div class="grid sm:grid-cols-3 gap-4 mt-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Industry (optional)</label>
+            <input id="industry" type="text" placeholder="e.g. FoodTech" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:bg-white" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Stage</label>
+            <select id="stage" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:bg-white">
+              <option value="idea">Idea</option>
+              <option value="pre-seed">Pre-seed</option>
+              <option value="seed">Seed</option>
+              <option value="series a">Series A</option>
+            </select>
+          </div>
+          <div class="flex items-end">
+            <button id="sample" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 text-sm font-medium">Load example</button>
+          </div>
+        </div>
+        <div class="flex items-center justify-end mt-4">
+          <button id="run" class="px-6 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold shadow-sm inline-flex items-center gap-2">
+            <span id="run-label">Validate startup</span>
+            <svg id="spinner" class="hidden spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-opacity=".3"/><path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3"/></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- Crew progress -->
+      <section id="progress" class="hidden mt-6 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <h2 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-fuchsia-500 dot"></span> Crew at work
+        </h2>
+        <div id="crew" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-2 mb-4"></div>
+        <ul id="log" class="space-y-1.5 text-sm text-slate-600 font-mono max-h-56 overflow-auto"></ul>
+      </section>
+
+      <!-- Error -->
+      <div id="error" class="hidden mt-6 bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm"></div>
+
+      <!-- Results -->
+      <section id="results" class="hidden mt-6 space-y-6"></section>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-200 bg-white/70">
+    <div class="max-w-7xl mx-auto px-4 py-5 text-center text-sm text-slate-500">
+      Made by <span class="font-semibold text-violet-600">Maryam Mumtaz</span>
+      <span class="mx-1.5 text-slate-300">·</span>
+      AI Engineer &amp; Founder, Marsa Empower
+    </div>
+  </footer>
+
+  <!-- Success popup -->
+  <div id="modal" class="hidden fixed inset-0 z-40 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+    <div class="pop bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
+      <div id="modal-icon" class="mx-auto w-14 h-14 rounded-full bg-violet-100 flex items-center justify-center text-2xl">🎯</div>
+      <h3 id="modal-title" class="mt-4 text-lg font-bold text-slate-900">Validation complete!</h3>
+      <p id="modal-sub" class="mt-1 text-sm text-slate-500">Your diligence packet is ready.</p>
+      <div class="mt-5 flex gap-2">
+        <button id="modal-close" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 text-sm font-medium">View report</button>
+        <a id="modal-download" href="#" class="flex-1 px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold inline-flex items-center justify-center gap-1.5">
+          ⬇ Download PDF
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let data = null;
+    let currentJob = null;
+
+    const CREW = [
+      ["market", "Market Researcher", "📊"],
+      ["competitors", "Competitor Scout", "🔍"],
+      ["financials", "Financial Modeler", "💰"],
+      ["risks", "Risk Analyst", "⚠️"],
+      ["pitch", "Pitch Writer", "🎤"],
+      ["verdict", "Go/No-Go Scorer", "🎯"],
+    ];
+
+    function esc(s){ const d=document.createElement("div"); d.textContent=s??""; return d.innerHTML; }
+    function log(stage, msg) {
+      const li = document.createElement("li");
+      li.innerHTML = `<span class="text-violet-600 font-semibold">[${stage}]</span> ${esc(msg)}`;
+      $("log").appendChild(li);
+      $("log").scrollTop = $("log").scrollHeight;
+    }
+
+    function renderCrew() {
+      $("crew").innerHTML = CREW.map(([key,name,icon]) => `
+        <div id="crew-${key}" class="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-500 transition">
+          <span class="text-base">${icon}</span>
+          <span class="flex-1 font-medium">${name}</span>
+          <span data-state="${key}" class="text-slate-300">•</span>
+        </div>`).join("");
+    }
+    function crewState(key, state) {
+      const el = $(`crew-${key}`); if (!el) return;
+      const badge = el.querySelector(`[data-state="${key}"]`);
+      if (state === "active") {
+        el.className = "flex items-center gap-2 px-3 py-2 rounded-xl border border-violet-300 bg-violet-50 text-sm text-violet-700 transition";
+        badge.innerHTML = '<svg class="spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-opacity=".3"/><path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3"/></svg>';
+      } else if (state === "done") {
+        el.className = "flex items-center gap-2 px-3 py-2 rounded-xl border border-emerald-200 bg-emerald-50 text-sm text-emerald-700 transition";
+        badge.innerHTML = "✓";
+      }
+    }
+
+    $("sample").addEventListener("click", () => {
+      $("idea").value = "An AI meal planner that auto-orders groceries for busy working families";
+      $("industry").value = "FoodTech"; $("stage").value = "pre-seed";
+    });
+
+    const DECISION = {
+      "GO": ["bg-emerald-500", "text-emerald-600", "bg-emerald-50 border-emerald-200", "✅"],
+      "CONDITIONAL GO": ["bg-amber-500", "text-amber-600", "bg-amber-50 border-amber-200", "⚖️"],
+      "NO-GO": ["bg-red-500", "text-red-600", "bg-red-50 border-red-200", "🛑"],
+    };
+    const SCORE_COLORS = ["#7c3aed","#a855f7","#d946ef","#ec4899","#f43f5e"];
+
+    function money(v) {
+      v = Number(v)||0; const neg = v<0; v = Math.abs(v);
+      let s;
+      if (v >= 1e9) s = "$"+(v/1e9).toFixed(1)+"B";
+      else if (v >= 1e6) s = "$"+(v/1e6).toFixed(1)+"M";
+      else if (v >= 1e3) s = "$"+(v/1e3).toFixed(0)+"K";
+      else s = "$"+v.toFixed(0);
+      return (neg?"-":"")+s;
+    }
+
+    function render(job_id, d) {
+      data = d; currentJob = job_id;
+      const m = d.market||{}, comp = d.competitors||{}, fin = d.financials||{}, risks = d.risks||{}, pitch = d.pitch||{}, v = d.verdict||{}, s = d.stats||{};
+      const dec = v.decision || "CONDITIONAL GO";
+      const [barBg, txtCls, chipCls, decIcon] = DECISION[dec] || DECISION["CONDITIONAL GO"];
+
+      const competitors = (comp.competitors||[]).map(c => `
+        <div class="bg-white border border-slate-200 rounded-xl p-4">
+          <div class="flex items-center justify-between gap-2">
+            <p class="text-sm font-semibold text-slate-800">${esc(c.name)}</p>
+          </div>
+          <p class="text-xs text-slate-500 mt-1">${esc(c.positioning||"")}</p>
+          <div class="mt-2 grid grid-cols-2 gap-2 text-xs">
+            <span class="text-emerald-700"><b>+</b> ${esc(c.strength||"—")}</span>
+            <span class="text-red-600"><b>−</b> ${esc(c.weakness||"—")}</span>
+          </div>
+        </div>`).join("");
+
+      const pestle = (risks.pestle||[]).map(r => {
+        const sev = (x)=>({high:"text-red-600 bg-red-50 border-red-200",medium:"text-amber-600 bg-amber-50 border-amber-200",low:"text-emerald-600 bg-emerald-50 border-emerald-200"}[(x||"").toLowerCase()]||"text-slate-500 bg-slate-50 border-slate-200");
+        return `<div class="bg-white border border-slate-200 rounded-xl p-4">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-semibold uppercase tracking-wide text-violet-600">${esc(r.category)}</span>
+            <span class="px-1.5 py-0.5 rounded border text-[10px] font-semibold ${sev(r.severity)}">${esc(r.severity)}</span>
+          </div>
+          <p class="text-sm font-medium text-slate-800 mt-1.5">${esc(r.risk)}</p>
+          <p class="mt-2 text-xs text-slate-500"><span class="font-medium text-emerald-700">Mitigation:</span> ${esc(r.mitigation||"")}</p>
+        </div>`;
+      }).join("");
+
+      const deck = (pitch.deck_outline||[]).map((sl,i) => `
+        <div class="flex gap-3 items-start">
+          <span class="w-6 h-6 shrink-0 rounded-full bg-violet-100 text-violet-700 text-xs font-bold flex items-center justify-center">${i+1}</span>
+          <div><p class="text-sm font-medium text-slate-800">${esc(sl.slide||sl)}</p><p class="text-xs text-slate-500">${esc(sl.content||"")}</p></div>
+        </div>`).join("");
+
+      const listBlock = (label, items, cls) => {
+        items = (items||[]).filter(Boolean);
+        if (!items.length) return "";
+        return `<div><p class="text-xs font-semibold uppercase tracking-wide ${cls} mb-1.5">${label}</p>
+          <ul class="space-y-1 text-sm text-slate-600">${items.map(x=>`<li>• ${esc(x)}</li>`).join("")}</ul></div>`;
+      };
+
+      $("results").innerHTML = `
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+          <div><h2 class="text-xl font-bold text-slate-900">${esc(pitch.tagline||"Validation Report")}</h2>
+          <p class="text-sm text-slate-500 max-w-2xl">${esc(d.idea||"")}</p></div>
+          <a href="/report/${job_id}.pdf" class="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold shadow-sm inline-flex items-center gap-1.5">⬇ Download report (PDF)</a>
+        </div>
+
+        <!-- Verdict -->
+        <div class="rounded-2xl border ${chipCls} p-5 flex flex-col sm:flex-row items-center gap-5">
+          <div class="text-center shrink-0">
+            <div class="text-4xl">${decIcon}</div>
+            <div class="mt-1 text-lg font-bold ${txtCls}">${esc(dec)}</div>
+            <div class="text-3xl font-extrabold text-slate-900 mt-1">${v.score||0}<span class="text-base text-slate-400">/100</span></div>
+          </div>
+          <div class="flex-1">
+            <p class="text-sm text-slate-700">${esc(v.rationale||"")}</p>
+            <div class="grid sm:grid-cols-3 gap-4 mt-3">
+              ${listBlock("Strengths", v.strengths, "text-emerald-600")}
+              ${listBlock("Concerns", v.concerns, "text-red-600")}
+              ${listBlock("Conditions", v.conditions, "text-amber-600")}
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          ${statCard("TAM", s.tam_label||"—", "text-violet-600")}
+          ${statCard("SOM (3yr)", s.som_label||"—", "text-fuchsia-600")}
+          ${statCard("Competitors", s.competitors||0, "text-pink-600")}
+          ${statCard("Yr-3 revenue", s.year3_revenue||"—", "text-teal-600")}
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-6">
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="font-semibold text-slate-800 mb-1">📊 Market Opportunity</h3>
+            <p class="text-sm text-slate-500 mb-3">${esc(m.summary||"")}</p>
+            <canvas id="marketChart" height="200"></canvas>
+            <p class="text-xs text-slate-400 mt-2 text-center">CAGR ${m.cagr_pct||0}% · Target: ${esc(m.target_customer||"—")}</p>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="font-semibold text-slate-800 mb-1">💰 3-Year Projection</h3>
+            <p class="text-sm text-slate-500 mb-3">${esc(fin.revenue_model||"")}</p>
+            <canvas id="finChart" height="200"></canvas>
+            <p class="text-xs text-slate-400 mt-2 text-center">Seed ask: ${esc(fin.seed_ask_label||"—")} · Break-even: ${esc(fin.break_even||"—")}</p>
+          </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+          <h3 class="font-semibold text-slate-800 mb-1">🎯 Verdict Scorecard</h3>
+          <canvas id="scoreChart" height="120"></canvas>
+        </div>
+
+        ${competitors ? `<div>
+          <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
+            <h3 class="font-semibold text-slate-800">🔍 Competitive Landscape</h3>
+            <span class="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-500">Saturation: ${esc(comp.saturation||"—")}</span>
+          </div>
+          <p class="text-sm text-slate-500 mb-3">${esc(comp.landscape||"")}</p>
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">${competitors}</div>
+          ${comp.differentiation?`<p class="mt-3 text-sm text-slate-600"><span class="font-semibold text-violet-700">Our wedge:</span> ${esc(comp.differentiation)}</p>`:""}
+          ${comp.moat?`<p class="mt-1 text-sm text-slate-600"><span class="font-semibold text-violet-700">Potential moat:</span> ${esc(comp.moat)}</p>`:""}
+        </div>` : ""}
+
+        ${pestle ? `<div>
+          <h3 class="font-semibold text-slate-800 mb-1">⚠️ PESTLE Risk Assessment</h3>
+          <p class="text-sm text-slate-500 mb-3">${esc(risks.summary||"")}</p>
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">${pestle}</div>
+        </div>` : ""}
+
+        ${pitch.elevator_pitch ? `<div class="grid lg:grid-cols-2 gap-6">
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="font-semibold text-slate-800 mb-2">🎤 Elevator Pitch</h3>
+            <p class="text-sm text-slate-600 mb-3">${esc(pitch.elevator_pitch)}</p>
+            <div class="space-y-2 text-sm">
+              ${pitch.problem?`<p><span class="font-semibold text-violet-700">Problem:</span> ${esc(pitch.problem)}</p>`:""}
+              ${pitch.solution?`<p><span class="font-semibold text-violet-700">Solution:</span> ${esc(pitch.solution)}</p>`:""}
+              ${pitch.why_now?`<p><span class="font-semibold text-violet-700">Why now:</span> ${esc(pitch.why_now)}</p>`:""}
+            </div>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="font-semibold text-slate-800 mb-3">📑 Investor Deck Outline</h3>
+            <div class="space-y-2.5">${deck}</div>
+          </div>
+        </div>` : ""}
+
+        <div class="text-xs text-slate-400 text-center">Estimates are AI-generated for exploration — validate with primary research before investing.</div>`;
+      $("results").classList.remove("hidden");
+
+      buildMarketChart(m);
+      buildFinChart(fin);
+      buildScoreChart(v);
+      showModal(job_id, d);
+    }
+
+    function statCard(label, val, cls) {
+      return `<div class="rise bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+        <p class="text-xs font-medium text-slate-400 uppercase tracking-wide">${label}</p>
+        <p class="mt-1 text-xl font-bold ${cls}">${esc(val)}</p></div>`;
+    }
+
+    let marketChart=null, finChart=null, scoreChart=null;
+
+    function buildMarketChart(m) {
+      const ctx = $("marketChart"); if (!ctx) return;
+      if (marketChart) marketChart.destroy();
+      marketChart = new Chart(ctx, {
+        type:"bar",
+        data:{ labels:["TAM","SAM","SOM"], datasets:[{ label:"Market ($)",
+          data:[m.tam_usd||0, m.sam_usd||0, m.som_usd||0],
+          backgroundColor:["#7c3aed","#a855f7","#d946ef"], borderRadius:6 }]},
+        options:{ responsive:true, maintainAspectRatio:true,
+          plugins:{ legend:{display:false}, tooltip:{callbacks:{label:(c)=>money(c.parsed.y)}} },
+          scales:{ y:{ ticks:{ callback:(v)=>money(v), font:{size:10} } }, x:{ ticks:{font:{size:11}} } } },
+      });
+    }
+
+    function buildFinChart(fin) {
+      const ctx = $("finChart"); if (!ctx) return;
+      if (finChart) finChart.destroy();
+      const rows = fin.projections||[];
+      finChart = new Chart(ctx, {
+        type:"bar",
+        data:{ labels:rows.map(r=>"Year "+r.year), datasets:[
+          { label:"Revenue", data:rows.map(r=>r.revenue_usd||0), backgroundColor:"#7c3aed", borderRadius:5 },
+          { label:"Costs", data:rows.map(r=>r.costs_usd||0), backgroundColor:"#f59e0b", borderRadius:5 },
+          { label:"Profit", type:"line", data:rows.map(r=>r.profit_usd||0), borderColor:"#16a34a", backgroundColor:"#16a34a", tension:.3, pointRadius:4 },
+        ]},
+        options:{ responsive:true, maintainAspectRatio:true,
+          plugins:{ legend:{position:"bottom", labels:{usePointStyle:true, padding:12, font:{size:10}}}, tooltip:{callbacks:{label:(c)=>c.dataset.label+": "+money(c.parsed.y)}} },
+          scales:{ y:{ ticks:{ callback:(v)=>money(v), font:{size:10} } }, x:{ ticks:{font:{size:11}} } } },
+      });
+    }
+
+    function buildScoreChart(v) {
+      const ctx = $("scoreChart"); if (!ctx) return;
+      if (scoreChart) scoreChart.destroy();
+      const sc = v.scores||{};
+      const labels = ["Market","Competition","Financials","Risk","Team/Exec"];
+      const vals = [sc.market||0, sc.competition||0, sc.financials||0, sc.risk||0, sc.team_execution||0];
+      scoreChart = new Chart(ctx, {
+        type:"bar",
+        data:{ labels, datasets:[{ label:"Score", data:vals,
+          backgroundColor: SCORE_COLORS, borderRadius:6 }]},
+        options:{ indexAxis:"y", responsive:true, maintainAspectRatio:true,
+          plugins:{ legend:{display:false}, tooltip:{callbacks:{label:(c)=>c.parsed.x+"/100"}} },
+          scales:{ x:{ max:100, ticks:{font:{size:10}} }, y:{ ticks:{font:{size:11}} } } },
+      });
+    }
+
+    function showModal(job_id, d) {
+      const v = d.verdict||{}, dec = v.decision||"CONDITIONAL GO";
+      const icons = {"GO":"✅","CONDITIONAL GO":"⚖️","NO-GO":"🛑"};
+      $("modal-icon").textContent = icons[dec] || "🎯";
+      $("modal-title").textContent = dec + " · " + (v.score||0) + "/100";
+      $("modal-sub").textContent = `${d.stats?.competitors||0} competitors analyzed · ${d.stats?.risks||0} risks assessed · TAM ${d.stats?.tam_label||"—"}.`;
+      $("modal-download").href = `/report/${job_id}.pdf`;
+      $("modal").classList.remove("hidden");
+    }
+    function hideModal(){ $("modal").classList.add("hidden"); }
+    $("modal-close").addEventListener("click", () => { hideModal(); $("results").scrollIntoView({behavior:"smooth"}); });
+    $("modal").addEventListener("click", (e) => { if (e.target === $("modal")) hideModal(); });
+    $("modal-download").addEventListener("click", hideModal);
+
+    function start() {
+      const idea = $("idea").value.trim();
+      if (idea.length < 8) { $("error").textContent = "Describe your startup idea in a sentence."; $("error").classList.remove("hidden"); $("idea").focus(); return; }
+
+      $("run").disabled = true;
+      $("run-label").textContent = "Validating";
+      $("spinner").classList.remove("hidden");
+      $("error").classList.add("hidden");
+      $("results").classList.add("hidden");
+      $("log").innerHTML = "";
+      $("progress").classList.remove("hidden");
+      renderCrew();
+
+      const proto = location.protocol === "https:" ? "wss" : "ws";
+      const ws = new WebSocket(`${proto}://${location.host}/ws/validate`);
+      ws.onopen = () => ws.send(JSON.stringify({ idea, industry: $("industry").value.trim(), stage: $("stage").value }));
+      let prev = null;
+      ws.onmessage = (ev) => {
+        const msg = JSON.parse(ev.data);
+        if (msg.type === "progress") {
+          log(msg.stage, msg.message);
+          if (CREW.some(c => c[0] === msg.stage)) {
+            if (prev) crewState(prev, "done");
+            crewState(msg.stage, "active");
+            prev = msg.stage;
+          } else if (msg.stage === "done" && prev) {
+            crewState(prev, "done");
+          }
+        }
+        else if (msg.type === "result") render(msg.job_id, msg.data);
+        else if (msg.type === "error") { $("error").textContent = "Error: " + msg.message; $("error").classList.remove("hidden"); }
+      };
+      const done = () => { $("run").disabled = false; $("run-label").textContent = "Validate startup"; $("spinner").classList.add("hidden"); };
+      ws.onclose = done;
+      ws.onerror = () => { $("error").textContent = "Connection error. Is the server running?"; $("error").classList.remove("hidden"); done(); };
+    }
+
+    $("run").addEventListener("click", start);
+    $("idea").addEventListener("keydown", (e) => { if (e.key === "Enter") start(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") hideModal(); });
+  </script>
+</body>
+</html>
