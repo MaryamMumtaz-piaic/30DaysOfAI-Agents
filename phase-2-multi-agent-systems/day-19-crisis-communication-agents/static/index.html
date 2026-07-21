@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Day 19 — AI Crisis Communication & Brand Protection Agent</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="/static/index.css">
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Header Navbar -->
+    <header class="app-header">
+      <div class="brand-badge">
+        <div class="brand-icon">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <div class="brand-title">
+          <h1>Day 19 — AI Crisis Communication Agent</h1>
+          <p>Multi-Agent Brand Protection & Automated PR Protocol System</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <span class="author-chip"><i class="fa-solid fa-code"></i> Maryam Mumtaz</span>
+        <button id="pdfBtn" class="btn-secondary" style="display: none;" onclick="downloadPDFReport()">
+          <i class="fa-solid fa-file-pdf"></i> Download PDF Brief
+        </button>
+      </div>
+    </header>
+
+    <!-- App Body Grid -->
+    <div class="dashboard-grid">
+      <!-- Left Column: Input Form & Presets -->
+      <div class="input-sidebar">
+        <div class="panel-card">
+          <div class="panel-title">
+            <i class="fa-solid fa-triangle-exclamation" style="color: var(--primary);"></i> Incident Parameters
+          </div>
+
+          <form id="crisisForm" onsubmit="handleFormSubmit(event)">
+            <div class="form-group">
+              <label for="brandName">Company / Brand Name</label>
+              <input type="text" id="brandName" class="form-control" placeholder="e.g. CloudScale Inc, PayFast, NeoTech" required value="CloudScale Systems">
+            </div>
+
+            <div class="form-group">
+              <label for="incidentContext">Crisis Description / Context</label>
+              <textarea id="incidentContext" class="form-control" placeholder="Describe the outage, security breach, customer controversy, or executive incident..." required>Global API service degradation affecting enterprise authentication servers for 3 hours. User data safe, but core web dashboards timing out across EU & US regions.</textarea>
+            </div>
+
+            <div class="presets-label">
+              <i class="fa-solid fa-wand-magic-sparkles"></i> Quick Test Scenarios
+            </div>
+            <div class="preset-pills">
+              <button type="button" class="preset-btn" onclick="loadPreset('outage')">
+                <strong>P1: Major API Outage</strong>
+                <span>CloudScale authentication failure across major regions</span>
+              </button>
+              <button type="button" class="preset-btn" onclick="loadPreset('security')">
+                <strong>P0: Data Exposure Alert</strong>
+                <span>Unauthenticated S3 bucket leak rumor on Reddit & X</span>
+              </button>
+              <button type="button" class="preset-btn" onclick="loadPreset('executive')">
+                <strong>P2: Executive Statement backlash</strong>
+                <span>Controversial public post sparking minor boycotts</span>
+              </button>
+            </div>
+
+            <button type="submit" id="submitBtn" class="btn-primary">
+              <i class="fa-solid fa-bolt"></i> Run Crisis Pipeline
+            </button>
+          </form>
+        </div>
+
+        <!-- Execution Progress Box -->
+        <div id="progressBox" class="agent-progress-box" style="display: none;">
+          <h4><i class="fa-solid fa-network-wired" style="color: var(--primary);"></i> Agent Pipeline Executing...</h4>
+          <div id="step1" class="agent-step">
+            <div class="step-indicator">1</div>
+            <span>Social Sentiment Tracker Agent</span>
+          </div>
+          <div id="step2" class="agent-step">
+            <div class="step-indicator">2</div>
+            <span>News Alert & Media Agent</span>
+          </div>
+          <div id="step3" class="agent-step">
+            <div class="step-indicator">3</div>
+            <span>Crisis Severity Classifier Agent</span>
+          </div>
+          <div id="step4" class="agent-step">
+            <div class="step-indicator">4</div>
+            <span>PR Response Drafter Agent</span>
+          </div>
+          <div id="step5" class="agent-step">
+            <div class="step-indicator">5</div>
+            <span>Stakeholder Communicator Agent</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Results & Intelligence Dashboard -->
+      <div class="results-container">
+        <!-- Empty State (Shown initially) -->
+        <div id="emptyState" class="empty-state">
+          <div class="empty-state-icon"><i class="fa-solid fa-tower-cell"></i></div>
+          <h3>No Active Crisis Analysis Triggered</h3>
+          <p>Select a quick scenario or describe an incident on the left, then click <strong>Run Crisis Pipeline</strong> to launch all 5 AI agents.</p>
+        </div>
+
+        <!-- Active Dashboard Results (Hidden initially) -->
+        <div id="activeDashboard" style="display: none;">
+          <!-- Severity Banner -->
+          <div id="severityBanner" class="severity-card P1">
+            <div>
+              <div id="sevBadge" class="severity-badge-big">
+                <i class="fa-solid fa-triangle-exclamation"></i> <span id="sevLevelText">P1 - HIGH CRISIS INCIDENT</span>
+              </div>
+              <p id="sevJustification" style="margin-top: 6px; font-size: 0.9rem; color: var(--text-secondary);">
+                Analyzing threat level impact...
+              </p>
+            </div>
+            <div class="risk-meter">
+              <div id="riskScore" class="risk-score-num">84</div>
+              <div class="risk-label">Threat Index / 100</div>
+            </div>
+          </div>
+
+          <!-- Top Metrics Bar -->
+          <div class="metrics-row">
+            <div class="metric-card">
+              <div class="metric-title">Sentiment Score</div>
+              <div id="sentimentVal" class="metric-value" style="color: #dc2626;">-0.82</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-title">24h Mentions</div>
+              <div id="mentionsVal" class="metric-value">14,200</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-title">Negative Mentions</div>
+              <div id="negPctVal" class="metric-value" style="color: #ea580c;">78.5%</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-title">Media Outlet Reach</div>
+              <div id="mediaReachVal" class="metric-value">500+</div>
+            </div>
+          </div>
+
+          <!-- Navigation Tabs -->
+          <div class="tabs-navigation">
+            <button class="tab-btn active" onclick="switchTab(event, 'feed')"><i class="fa-solid fa-rss"></i> Social & Media Feed</button>
+            <button class="tab-btn" onclick="switchTab(event, 'pr')"><i class="fa-solid fa-bullhorn"></i> PR Press Statements</button>
+            <button class="tab-btn" onclick="switchTab(event, 'stakeholders')"><i class="fa-solid fa-envelope-open-text"></i> Stakeholder Emails</button>
+            <button class="tab-btn" onclick="switchTab(event, 'protocol')"><i class="fa-solid fa-clipboard-check"></i> Escalation Protocol</button>
+          </div>
+
+          <!-- Tab Content 1: Social & News Feed -->
+          <div id="tab-feed" class="tab-pane">
+            <div style="margin-bottom: 14px;">
+              <h4 style="font-size: 0.95rem; font-weight: 700;">Live Community & Social Media Sentiment Monitoring</h4>
+              <p id="viralRiskText" style="font-size: 0.85rem; color: var(--text-muted);"></p>
+            </div>
+            <div id="feedList" class="feed-list"></div>
+
+            <div style="margin-top: 24px; margin-bottom: 14px;">
+              <h4 style="font-size: 0.95rem; font-weight: 700;">Journalist & Press Coverage Tracking</h4>
+            </div>
+            <div id="newsList" class="feed-list"></div>
+          </div>
+
+          <!-- Tab Content 2: PR Press Statements -->
+          <div id="tab-pr" class="tab-pane" style="display: none;">
+            <div class="response-box">
+              <div class="response-box-header">
+                <div class="response-box-title"><i class="fa-solid fa-newspaper" style="color: var(--primary);"></i> Official Press Release Statement</div>
+                <button class="btn-copy" onclick="copyText('pressBody')"><i class="fa-regular fa-copy"></i> Copy Text</button>
+              </div>
+              <h3 id="pressHeadline" style="font-size: 1.05rem; font-weight: 700; margin-bottom: 10px;"></h3>
+              <div id="pressBody" class="code-block"></div>
+            </div>
+
+            <div class="response-box">
+              <div class="response-box-header">
+                <div class="response-box-title"><i class="fa-brands fa-x-twitter"></i> X (Twitter) Official Thread</div>
+                <button class="btn-copy" onclick="copyText('twitterThread')"><i class="fa-regular fa-copy"></i> Copy Thread</button>
+              </div>
+              <div id="twitterThread" class="code-block"></div>
+            </div>
+
+            <div class="response-box">
+              <div class="response-box-header">
+                <div class="response-box-title"><i class="fa-solid fa-user-shield" style="color: var(--primary);"></i> Executive Holding Statement (Spokesperson Quote)</div>
+                <button class="btn-copy" onclick="copyText('holdingStatement')"><i class="fa-regular fa-copy"></i> Copy Quote</button>
+              </div>
+              <div id="holdingStatement" class="code-block" style="font-style: italic;"></div>
+            </div>
+          </div>
+
+          <!-- Tab Content 3: Stakeholder Emails -->
+          <div id="tab-stakeholders" class="tab-pane" style="display: none;">
+            <div class="response-box">
+              <div class="response-box-header">
+                <div class="response-box-title"><i class="fa-solid fa-users"></i> Customer & End-User Direct Briefing</div>
+                <button class="btn-copy" onclick="copyText('custEmail')"><i class="fa-regular fa-copy"></i> Copy Email</button>
+              </div>
+              <div id="custEmail" class="code-block"></div>
+            </div>
+
+            <div class="response-box">
+              <div class="response-box-header">
+                <div class="response-box-title"><i class="fa-solid fa-building"></i> Enterprise VIP SLA Advisory</div>
+                <button class="btn-copy" onclick="copyText('entEmail')"><i class="fa-regular fa-copy"></i> Copy Email</button>
+              </div>
+              <div id="entEmail" class="code-block"></div>
+            </div>
+
+            <div class="response-box">
+              <div class="response-box-header">
+                <div class="response-box-title"><i class="fa-solid fa-chart-line"></i> Investor & Board Member Strategic Note</div>
+                <button class="btn-copy" onclick="copyText('invEmail')"><i class="fa-regular fa-copy"></i> Copy Email</button>
+              </div>
+              <div id="invEmail" class="code-block"></div>
+            </div>
+
+            <div class="response-box">
+              <div class="response-box-header">
+                <div class="response-box-title"><i class="fa-solid fa-id-badge"></i> Internal Staff Communication & Media Policy</div>
+                <button class="btn-copy" onclick="copyText('staffEmail')"><i class="fa-regular fa-copy"></i> Copy Email</button>
+              </div>
+              <div id="staffEmail" class="code-block"></div>
+            </div>
+          </div>
+
+          <!-- Tab Content 4: Escalation Protocol -->
+          <div id="tab-protocol" class="tab-pane" style="display: none;">
+            <div class="panel-card" style="margin-bottom: 16px;">
+              <h4 style="font-size: 1rem; font-weight: 700; margin-bottom: 8px;"><i class="fa-solid fa-user-gear" style="color: var(--primary);"></i> Recommended Escalation Targets</h4>
+              <p id="escalationTarget" style="font-size: 0.92rem; color: var(--text-secondary); font-weight: 600;"></p>
+            </div>
+
+            <div class="panel-card" style="margin-bottom: 16px;">
+              <h4 style="font-size: 1rem; font-weight: 700; margin-bottom: 8px;"><i class="fa-solid fa-clock-rotate-left" style="color: var(--primary);"></i> Immediate 60-Minute Priority Protocol</h4>
+              <p id="actionPriorityText" style="font-size: 0.92rem; color: var(--text-secondary);"></p>
+            </div>
+
+            <div class="panel-card">
+              <h4 style="font-size: 1rem; font-weight: 700; margin-bottom: 8px; color: #dc2626;"><i class="fa-solid fa-ban"></i> "Do Not Say" Public Spokesperson Guidelines</h4>
+              <div id="doNotSayList" class="code-block" style="background: #fef2f2; border-color: #fecaca; color: #991b1b;"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let globalData = null;
+
+    const presets = {
+      outage: {
+        brand: "CloudScale Systems",
+        context: "Global API service degradation affecting enterprise authentication servers for 3 hours. User data safe, but core web dashboards timing out across EU & US regions."
+      },
+      security: {
+        brand: "FinVault Global",
+        context: "Viral tweets and Reddit thread claiming an unauthenticated cloud storage bucket exposed encrypted transaction metadata. No confirmed breach yet, but customers panicking."
+      },
+      executive: {
+        brand: "AeroJet Logistics",
+        context: "CEO's controversial off-the-cuff comments during a live webcast went viral on Twitter and LinkedIn, causing negative backlash and minor customer cancellation threats."
+      }
+    };
+
+    function loadPreset(type) {
+      if (presets[type]) {
+        document.getElementById("brandName").value = presets[type].brand;
+        document.getElementById("incidentContext").value = presets[type].context;
+      }
+    }
+
+    async function handleFormSubmit(e) {
+      e.preventDefault();
+      const brand = document.getElementById("brandName").value.trim();
+      const context = document.getElementById("incidentContext").value.trim();
+
+      if (!brand || !context) return;
+
+      // UI States
+      document.getElementById("submitBtn").disabled = true;
+      document.getElementById("submitBtn").innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Analyzing Crisis...';
+      document.getElementById("progressBox").style.display = "block";
+      document.getElementById("emptyState").style.display = "none";
+      document.getElementById("activeDashboard").style.display = "none";
+      document.getElementById("pdfBtn").style.display = "none";
+
+      resetSteps();
+      animateSteps();
+
+      try {
+        const response = await fetch("/api/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ brand_name: brand, incident_context: context })
+        });
+
+        const res = await response.json();
+        if (res.status === "success") {
+          globalData = res.data;
+          renderDashboard(globalData);
+          document.getElementById("pdfBtn").style.display = "inline-flex";
+        } else {
+          alert("Error analyzing crisis: " + (res.detail || "Unknown error"));
+        }
+      } catch (err) {
+        alert("Server error: " + err.message);
+      } finally {
+        document.getElementById("submitBtn").disabled = false;
+        document.getElementById("submitBtn").innerHTML = '<i class="fa-solid fa-bolt"></i> Run Crisis Pipeline';
+      }
+    }
+
+    function resetSteps() {
+      for (let i = 1; i <= 5; i++) {
+        const el = document.getElementById(`step${i}`);
+        el.className = "agent-step";
+        el.querySelector(".step-indicator").innerHTML = i;
+      }
+    }
+
+    function animateSteps() {
+      let step = 1;
+      const interval = setInterval(() => {
+        if (step > 1) {
+          const prev = document.getElementById(`step${step - 1}`);
+          prev.className = "agent-step completed";
+          prev.querySelector(".step-indicator").innerHTML = '<i class="fa-solid fa-check"></i>';
+        }
+        if (step <= 5) {
+          const curr = document.getElementById(`step${step}`);
+          curr.className = "agent-step active";
+        } else {
+          clearInterval(interval);
+        }
+        step++;
+      }, 700);
+    }
+
+    function renderDashboard(data) {
+      document.getElementById("progressBox").style.display = "none";
+      document.getElementById("activeDashboard").style.display = "block";
+
+      const sev = data.severity_classification || {};
+      const soc = data.social_sentiment || {};
+      const news = data.news_alert || {};
+      const pr = data.pr_responses || {};
+      const stk = data.stakeholder_communications || {};
+
+      // Severity Card
+      const sevLevel = sev.severity_level || "P1";
+      const banner = document.getElementById("severityBanner");
+      banner.className = `severity-card ${sevLevel}`;
+      document.getElementById("sevLevelText").innerText = `${sevLevel} - ${sev.severity_title || 'CRISIS ALERT'}`;
+      document.getElementById("sevJustification").innerText = sev.justification || '';
+      document.getElementById("riskScore").innerText = sev.risk_score_100 || 80;
+
+      // Metrics
+      document.getElementById("sentimentVal").innerText = soc.overall_sentiment_score || -0.7;
+      document.getElementById("mentionsVal").innerText = (soc.total_mentions_24h || 12000).toLocaleString();
+      document.getElementById("negPctVal").innerText = (soc.negative_mention_percentage || 75) + '%';
+      document.getElementById("mediaReachVal").innerText = (news.journalists_contacted_count || 12) + " Outlets";
+
+      // Social & News Feed
+      document.getElementById("viralRiskText").innerText = soc.viral_risk_assessment || '';
+      const feedList = document.getElementById("feedList");
+      feedList.innerHTML = (soc.simulated_feed || []).map(post => `
+        <div class="feed-item">
+          <div class="feed-header">
+            <span class="platform-tag">${post.platform}</span>
+            <span class="feed-author">${post.author}</span>
+          </div>
+          <div class="feed-content">${post.content}</div>
+          <div class="feed-footer">
+            <span>Engagement: ${post.engagement}</span>
+            <span style="color: #dc2626; font-weight: 600;">Sentiment: ${post.sentiment}</span>
+          </div>
+        </div>
+      `).join('');
+
+      const newsList = document.getElementById("newsList");
+      newsList.innerHTML = (news.top_news_articles || []).map(art => `
+        <div class="feed-item">
+          <div class="feed-header">
+            <span class="platform-tag" style="background: #eff6ff; color: #2563eb;">${art.outlet}</span>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">${art.published_ago}</span>
+          </div>
+          <div class="feed-author" style="font-size: 0.95rem; margin-bottom: 4px;">${art.headline}</div>
+          <div class="feed-content">${art.summary}</div>
+          <div class="feed-footer">
+            <span>Perceived Tone: <strong>${art.perceived_tone}</strong></span>
+          </div>
+        </div>
+      `).join('');
+
+      // PR Statements
+      const press = pr.press_release || {};
+      document.getElementById("pressHeadline").innerText = press.headline || '';
+      document.getElementById("pressBody").innerText = press.body || '';
+      document.getElementById("twitterThread").innerText = (pr.social_media_posts?.twitter_x_thread || []).join('\n\n');
+      document.getElementById("holdingStatement").innerText = pr.executive_holding_statement || '';
+
+      // Stakeholders
+      document.getElementById("custEmail").innerText = `Subject: ${stk.customer_email?.subject}\n\n${stk.customer_email?.body}`;
+      document.getElementById("entEmail").innerText = `Subject: ${stk.enterprise_client_email?.subject}\n\n${stk.enterprise_client_email?.body}`;
+      document.getElementById("invEmail").innerText = `Subject: ${stk.investor_board_email?.subject}\n\n${stk.investor_board_email?.body}`;
+      document.getElementById("staffEmail").innerText = `Subject: ${stk.internal_team_email?.subject}\n\n${stk.internal_team_email?.body}`;
+
+      // Protocol
+      document.getElementById("escalationTarget").innerText = sev.recommended_escalation || 'Executive Board';
+      document.getElementById("actionPriorityText").innerText = sev.action_priority || '';
+      document.getElementById("doNotSayList").innerText = (pr.do_not_say_guidelines || []).map(g => `• ${g}`).join('\n');
+    }
+
+    function switchTab(e, tabId) {
+      document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+      document.querySelectorAll(".tab-pane").forEach(pane => pane.style.display = "none");
+
+      e.currentTarget.classList.add("active");
+      document.getElementById(`tab-${tabId}`).style.display = "block";
+    }
+
+    function copyText(elementId) {
+      const text = document.getElementById(elementId).innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        alert("Copied to clipboard!");
+      });
+    }
+
+    function downloadPDFReport() {
+      window.open("/api/pdf", "_blank");
+    }
+  </script>
+</body>
+</html>
