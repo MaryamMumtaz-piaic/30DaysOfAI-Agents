@@ -7,19 +7,21 @@
 
 ## 📖 Overview
 
-Upload any raw dataset. A 6-agent pipeline autonomously handles the full ML workflow: **Data Profiler** (EDA + statistics), **Data Cleaner** (nulls, outliers, encoding), **Feature Engineer** (new features + selection), **Model Selector** (trains and compares 5 models), **Hyperparameter Tuner** (Optuna), **Report Generator** (full ML report with charts and model card).
+Upload any CSV and pick a target column. A 6-agent pipeline autonomously runs the full ML workflow: **Data Profiler** (EDA, dtypes, missingness, correlations), **Data Cleaner** (dedupe, null imputation, outlier capping, junk-column drop), **Feature Engineer** (encoding, scaling, date-part extraction), **Model Selector** (trains and cross-validates 5 models on a common split), **Hyperparameter Tuner** (GridSearchCV on the leaderboard winner), and **Report Generator** (an LLM narrative + model card written from the real metrics). Classification vs regression is detected automatically, all model work is deterministic scikit-learn, and progress streams live over a WebSocket.
 
 ## ✨ Key Features
 
-- End-to-end automated ML pipeline on any CSV
-- Automatic EDA with 20+ statistical visualizations
-- Multi-model training and comparison leaderboard
-- Optuna hyperparameter optimization
-- Full PDF ML report with model card generation
+- End-to-end automated ML pipeline on any CSV — no code required
+- Automatic task detection (classification vs regression) from the target
+- Real EDA: dtypes, missingness, cardinality, and target correlations
+- Multi-model training with a cross-validated leaderboard (5 models)
+- GridSearchCV hyperparameter tuning of the winning model
+- Model card with held-out test metrics, best params, and feature importances
+- Full PDF ML report + live 6-agent progress dashboard
 
 ## 🛠️ Tech Stack
 
-Python · LangGraph · OpenAI SDK · Scikit-learn · Optuna · Pandas · Streamlit · Matplotlib · Seaborn
+Python · OpenAI SDK · Scikit-learn · Pandas · NumPy · FastAPI · WebSockets · HTML · Tailwind CSS · Chart.js · ReportLab
 
 ## ⚙️ Setup
 
@@ -29,12 +31,12 @@ python -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 cp ../../.env.example .env       # add your API keys
-streamlit run app.py
+uvicorn main:app --reload
 ```
 
 ## 📌 Status
 
-🚧 In development
+✅ Complete
 
 ---
 

@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Autonomous Data Science Pipeline · Day 15</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    @keyframes pulse-dot { 0%,100%{opacity:.35} 50%{opacity:1} }
+    .dot { animation: pulse-dot 1.2s ease-in-out infinite; }
+    body { background: linear-gradient(180deg,#f5f3ff 0%,#f8fafc 40%,#ffffff 100%); }
+    .spin { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg) } }
+    @keyframes pop { 0%{transform:scale(.9);opacity:0} 100%{transform:scale(1);opacity:1} }
+    .pop { animation: pop .22s ease-out; }
+    @keyframes rise { 0%{transform:translateY(12px);opacity:0} 100%{transform:translateY(0);opacity:1} }
+    .rise { animation: rise .4s ease-out both; }
+    .drop-active { border-color:#7c3aed; background:#f5f3ff; }
+  </style>
+</head>
+<body class="h-full min-h-screen text-slate-800 antialiased flex flex-col">
+
+  <!-- Navbar -->
+  <nav class="sticky top-0 z-20 backdrop-blur bg-white/80 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center text-white font-bold shadow-sm">🧪</div>
+        <div class="leading-tight">
+          <p class="font-semibold text-slate-900 text-sm">Data Science Pipeline</p>
+          <p class="text-xs text-violet-600 font-medium">This is Day #15 of our 30 Days AI Agent Challenge</p>
+        </div>
+      </div>
+      <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-50 border border-violet-200 text-violet-700 text-xs font-semibold">
+        <span class="w-2 h-2 rounded-full bg-violet-500 dot"></span> Day 15 / 30
+      </span>
+    </div>
+  </nav>
+
+  <main class="flex-1">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+
+      <!-- Hero -->
+      <header class="text-center mb-6">
+        <h1 class="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
+          Autonomous Data Science Pipeline
+        </h1>
+        <p class="mt-3 text-slate-500 max-w-2xl mx-auto">
+          Upload any CSV and pick a target column. Six agents profile the data, clean it, engineer
+          features, train and compare five models, tune the winner, and write the report — with real
+          scikit-learn metrics on a held-out test set.
+        </p>
+        <div class="mt-4 flex flex-wrap justify-center gap-2 text-xs">
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">🔍 Profile</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">🧹 Clean</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">⚙️ Features</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">🏆 5 models</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">🎛️ Tune</span>
+          <span class="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-600">📄 Report</span>
+        </div>
+      </header>
+
+      <!-- Upload card -->
+      <section class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <div id="drop" class="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center cursor-pointer transition">
+          <input id="file" type="file" accept=".csv,text/csv" class="hidden" />
+          <div class="text-4xl mb-2">📄</div>
+          <p id="drop-text" class="text-sm text-slate-600 font-medium">Drop a CSV here or <span class="text-violet-600 underline">browse</span></p>
+          <p class="text-xs text-slate-400 mt-1">Max 15 MB · classification or regression detected automatically</p>
+        </div>
+
+        <div id="config" class="hidden mt-4">
+          <div class="grid sm:grid-cols-3 gap-4 items-end">
+            <div class="sm:col-span-2">
+              <label class="block text-sm font-medium text-slate-700 mb-1.5">Target column (what to predict)</label>
+              <select id="target" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:bg-white"></select>
+            </div>
+            <button id="run" class="px-6 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold shadow-sm inline-flex items-center justify-center gap-2">
+              <span id="run-label">Run pipeline</span>
+              <svg id="spinner" class="hidden spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-opacity=".3"/><path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3"/></svg>
+            </button>
+          </div>
+          <p id="file-info" class="text-xs text-slate-400 mt-2"></p>
+        </div>
+      </section>
+
+      <!-- Progress -->
+      <section id="progress" class="hidden mt-6 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <h2 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-purple-500 dot"></span> Pipeline running
+        </h2>
+        <div id="agents" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-4"></div>
+        <ul id="log" class="space-y-1.5 text-sm text-slate-600 font-mono max-h-56 overflow-auto"></ul>
+      </section>
+
+      <!-- Error -->
+      <div id="error" class="hidden mt-6 bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm"></div>
+
+      <!-- Results -->
+      <section id="results" class="hidden mt-6 space-y-6"></section>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-200 bg-white/70">
+    <div class="max-w-7xl mx-auto px-4 py-5 text-center text-sm text-slate-500">
+      Made by <span class="font-semibold text-violet-600">Maryam Mumtaz</span>
+      <span class="mx-1.5 text-slate-300">·</span>
+      AI Engineer &amp; Founder, Marsa Empower
+    </div>
+  </footer>
+
+  <!-- Success popup -->
+  <div id="modal" class="hidden fixed inset-0 z-40 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+    <div class="pop bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
+      <div class="mx-auto w-14 h-14 rounded-full bg-violet-100 flex items-center justify-center text-2xl">🏆</div>
+      <h3 id="modal-title" class="mt-4 text-lg font-bold text-slate-900">Model trained!</h3>
+      <p id="modal-sub" class="mt-1 text-sm text-slate-500">Your ML report is ready.</p>
+      <div class="mt-5 flex gap-2">
+        <button id="modal-close" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-50 text-sm font-medium">View report</button>
+        <a id="modal-download" href="#" class="flex-1 px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold inline-flex items-center justify-center gap-1.5">
+          ⬇ Download PDF
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let data = null, currentJob = null, csvB64 = null, fileName = "", impChart = null, lbChart = null;
+
+    const AGENTS = [
+      ["profile", "Profiler", "🔍"],
+      ["clean", "Cleaner", "🧹"],
+      ["features", "Features", "⚙️"],
+      ["models", "Models", "🏆"],
+      ["tune", "Tuner", "🎛️"],
+      ["report", "Report", "📄"],
+    ];
+
+    function esc(s){ const d=document.createElement("div"); d.textContent=s??""; return d.innerHTML; }
+    function log(stage, msg) {
+      const li = document.createElement("li");
+      li.innerHTML = `<span class="text-violet-600 font-semibold">[${stage}]</span> ${esc(msg)}`;
+      $("log").appendChild(li); $("log").scrollTop = $("log").scrollHeight;
+    }
+
+    function renderAgents() {
+      $("agents").innerHTML = AGENTS.map(([key,name,icon]) => `
+        <div id="agent-${key}" class="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-500 transition">
+          <span class="text-base">${icon}</span><span class="flex-1 font-medium">${name}</span>
+          <span data-state="${key}" class="text-slate-300">•</span></div>`).join("");
+    }
+    function agentState(key, state) {
+      const el = $(`agent-${key}`); if (!el) return;
+      const badge = el.querySelector(`[data-state="${key}"]`);
+      if (state === "active") {
+        el.className = "flex items-center gap-2 px-3 py-2 rounded-xl border border-violet-300 bg-violet-50 text-sm text-violet-700 transition";
+        badge.innerHTML = '<svg class="spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-opacity=".3"/><path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" stroke-width="3"/></svg>';
+      } else if (state === "done") {
+        el.className = "flex items-center gap-2 px-3 py-2 rounded-xl border border-purple-200 bg-purple-50 text-sm text-purple-700 transition";
+        badge.innerHTML = "✓";
+      }
+    }
+
+    // ---- upload handling ----
+    const drop = $("drop");
+    drop.addEventListener("click", () => $("file").click());
+    drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("drop-active"); });
+    drop.addEventListener("dragleave", () => drop.classList.remove("drop-active"));
+    drop.addEventListener("drop", (e) => { e.preventDefault(); drop.classList.remove("drop-active");
+      if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
+    $("file").addEventListener("change", (e) => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+
+    function handleFile(file) {
+      if (!file.name.toLowerCase().endsWith(".csv")) { showErr("Please upload a .csv file."); return; }
+      if (file.size > 15*1024*1024) { showErr("File too large (max 15 MB)."); return; }
+      fileName = file.name;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const b64 = reader.result.split(",")[1];
+        csvB64 = b64;
+        $("drop-text").innerHTML = `✓ <span class="text-violet-600 font-semibold">${esc(file.name)}</span> loaded — <span class="underline">choose another</span>`;
+        $("file-info").textContent = `${(file.size/1024).toFixed(1)} KB`;
+        fetchColumns(b64);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function fetchColumns(b64) {
+      const proto = location.protocol === "https:" ? "wss" : "ws";
+      const ws = new WebSocket(`${proto}://${location.host}/ws/columns`);
+      ws.onopen = () => ws.send(JSON.stringify({ csv_b64: b64 }));
+      ws.onmessage = (ev) => {
+        const m = JSON.parse(ev.data);
+        if (m.type === "columns") {
+          $("target").innerHTML = m.columns.map(c => `<option ${c===m.suggested?"selected":""}>${esc(c)}</option>`).join("");
+          $("config").classList.remove("hidden");
+          $("error").classList.add("hidden");
+        } else if (m.type === "error") showErr("Could not read columns: " + m.message);
+      };
+      ws.onerror = () => showErr("Connection error reading the file.");
+    }
+
+    // ---- rendering ----
+    function statCard(label, val, cls) {
+      return `<div class="rise bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+        <p class="text-xs font-medium text-slate-400 uppercase tracking-wide">${label}</p>
+        <p class="mt-1 text-lg font-bold ${cls}">${esc(val)}</p></div>`;
+    }
+
+    function render(job_id, d) {
+      data = d; currentJob = job_id;
+      const p = d.profile||{}, cl = d.cleaning||{}, ft = d.features||{}, lb = d.leaderboard||[], mc = d.model_card||{}, ins = d.insights||{}, s = d.stats||{};
+      const metric = lb.length ? lb[0].primary_metric : "score";
+
+      const listBlock = (label, items, cls) => {
+        items = (items||[]).filter(Boolean);
+        if (!items.length) return "";
+        return `<div><p class="text-xs font-semibold uppercase tracking-wide ${cls} mb-1.5">${label}</p>
+          <ul class="space-y-1 text-sm text-slate-600">${items.map(x=>`<li>• ${esc(x)}</li>`).join("")}</ul></div>`;
+      };
+
+      const lbRows = lb.map((m,i) => `<tr class="border-b border-slate-100 ${i===0?"bg-violet-50":""}">
+        <td class="py-2 text-center">${i===0?'<span class="text-amber-500">★</span>':i+1}</td>
+        <td class="py-2 font-medium text-slate-800">${esc(m.name)}</td>
+        <td class="py-2 text-center">${m.cv_score} <span class="text-xs text-slate-400">±${m.cv_std}</span></td>
+        <td class="py-2 text-center font-semibold">${m.primary_score}</td>
+        <td class="py-2 text-xs text-slate-500">${esc(Object.entries(m.metrics||{}).filter(([k])=>k!=="accuracy"&&k!=="r2").map(([k,v])=>`${k}=${v}`).join(" · "))}</td></tr>`).join("");
+
+      const colRows = (p.columns||[]).slice(0,40).map(c => {
+        const summ = c.kind==="numeric" ? `μ=${c.mean} σ=${c.std} [${c.min}, ${c.max}]`
+          : (c.top_values||[]).map(t=>`${t.value}(${t.count})`).join(", ");
+        return `<tr class="border-b border-slate-100">
+          <td class="py-1.5 font-medium text-slate-700">${esc(c.name)}</td>
+          <td class="py-1.5 text-slate-400 text-xs">${esc(c.dtype)}</td>
+          <td class="py-1.5 text-center ${c.missing_pct>0?"text-amber-600":"text-slate-400"}">${c.missing_pct}%</td>
+          <td class="py-1.5 text-center">${c.unique}</td>
+          <td class="py-1.5 text-xs text-slate-500">${esc(summ)}</td></tr>`;
+      }).join("");
+
+      const params = Object.entries(mc.best_params||{}).map(([k,v])=>`<span class="text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-mono">${esc(k)}=${esc(v)}</span>`).join(" ");
+      const testMetrics = Object.entries(mc.test_metrics||{}).map(([k,v])=>`<div class="flex justify-between py-1 border-b border-slate-100"><span class="text-slate-500 uppercase text-xs">${esc(k)}</span><span class="font-semibold">${v}</span></div>`).join("");
+
+      const cleanLog = (cl.log||[]).map(x=>`<li>• ${esc(x)}</li>`).join("");
+
+      $("results").innerHTML = `
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+          <div><h2 class="text-xl font-bold text-slate-900">Predicting: ${esc(d.target)}</h2>
+          <p class="text-sm text-slate-500">${esc(d.task_type)} · ${p.rows} rows × ${p.cols} columns</p></div>
+          <a href="/report/${job_id}.pdf" class="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold shadow-sm inline-flex items-center gap-1.5">⬇ Download report (PDF)</a>
+        </div>
+
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          ${statCard("Best model", s.best_model, "text-violet-600")}
+          ${statCard("Test "+metric, s.best_score, "text-emerald-600")}
+          ${statCard("Features used", s.features_used, "text-purple-600")}
+          ${statCard("Task", d.task_type, "text-fuchsia-600")}
+        </div>
+
+        ${ins.summary?`<div class="rounded-2xl border border-violet-200 bg-violet-50 p-5">
+          <h3 class="font-semibold text-slate-800 mb-2">📄 Executive Summary</h3>
+          <p class="text-sm text-slate-700">${esc(ins.summary)}</p>
+          <div class="grid sm:grid-cols-2 gap-4 mt-3">${listBlock("Key findings", ins.findings, "text-violet-600")}${listBlock("Recommendations", ins.recommendations, "text-emerald-600")}</div>
+        </div>`:""}
+
+        <div class="grid lg:grid-cols-2 gap-6">
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="font-semibold text-slate-800 mb-3">🏆 Model Leaderboard</h3>
+            <div class="overflow-x-auto"><table class="w-full text-sm">
+              <thead><tr class="text-left text-xs text-slate-400 uppercase border-b border-slate-200">
+                <th class="py-1 text-center">#</th><th class="py-1">Model</th><th class="py-1 text-center">CV</th><th class="py-1 text-center">Test</th><th class="py-1">Metrics</th></tr></thead>
+              <tbody>${lbRows}</tbody></table></div>
+            <canvas id="lbChart" height="150" class="mt-4"></canvas>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="font-semibold text-slate-800 mb-3">📊 Feature Importances</h3>
+            <canvas id="impChart" height="260"></canvas>
+          </div>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <h3 class="font-semibold text-slate-800 mb-3">🔍 Data Profile</h3>
+            <p class="text-sm text-slate-500 mb-2">${p.total_missing||0} missing cells · ${p.duplicate_rows||0} duplicate rows</p>
+            <div class="overflow-x-auto max-h-72 overflow-y-auto"><table class="w-full text-sm">
+              <thead class="sticky top-0 bg-white"><tr class="text-left text-xs text-slate-400 uppercase border-b border-slate-200">
+                <th class="py-1">Column</th><th class="py-1">Type</th><th class="py-1 text-center">Missing</th><th class="py-1 text-center">Unique</th><th class="py-1">Summary</th></tr></thead>
+              <tbody>${colRows}</tbody></table></div>
+          </div>
+          <div class="space-y-6">
+            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+              <h3 class="font-semibold text-slate-800 mb-3">🎛️ Model Card</h3>
+              <div class="text-sm">
+                <div class="flex justify-between py-1 border-b border-slate-100"><span class="text-slate-500">Model</span><span class="font-semibold">${esc(mc.name)}</span></div>
+                <div class="flex justify-between py-1 border-b border-slate-100"><span class="text-slate-500">Tuned CV</span><span class="font-semibold">${mc.tuned_cv_score??"—"}</span></div>
+                <div class="flex justify-between py-1 border-b border-slate-100"><span class="text-slate-500">Train / Test</span><span class="font-semibold">${mc.train_size} / ${mc.test_size}</span></div>
+                ${testMetrics}
+              </div>
+              ${params?`<div class="mt-3"><p class="text-xs text-slate-400 mb-1">Best hyperparameters</p><div class="flex flex-wrap gap-1">${params}</div></div>`:""}
+            </div>
+            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+              <h3 class="font-semibold text-slate-800 mb-3">🧹 Cleaning Log</h3>
+              <ul class="space-y-1 text-sm text-slate-600">${cleanLog}</ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-xs text-slate-400 text-center">All metrics computed on a held-out 20% test split with scikit-learn. The summary is AI-written from the real numbers.</div>`;
+      $("results").classList.remove("hidden");
+
+      buildLbChart(lb, metric);
+      buildImpChart(mc.feature_importances||[]);
+      showModal(job_id, d);
+    }
+
+    function buildLbChart(lb, metric) {
+      const ctx = $("lbChart"); if (!ctx) return;
+      if (lbChart) lbChart.destroy();
+      lbChart = new Chart(ctx, {
+        type:"bar",
+        data:{ labels: lb.map(m=>m.name), datasets:[{ label:"Test "+metric,
+          data: lb.map(m=>m.primary_score), backgroundColor: lb.map((_,i)=>i===0?"#7c3aed":"#c4b5fd"), borderRadius:6 }]},
+        options:{ responsive:true, maintainAspectRatio:true,
+          plugins:{ legend:{display:false} },
+          scales:{ y:{ beginAtZero:true, ticks:{font:{size:9}} }, x:{ ticks:{font:{size:9}} } } },
+      });
+    }
+    function buildImpChart(imp) {
+      const ctx = $("impChart"); if (!ctx) return;
+      if (impChart) impChart.destroy();
+      if (!imp.length) { ctx.parentElement.insertAdjacentHTML("beforeend", '<p class="text-sm text-slate-400 text-center">No feature importances for this model.</p>'); return; }
+      impChart = new Chart(ctx, {
+        type:"bar",
+        data:{ labels: imp.map(f=>f.feature), datasets:[{ label:"Importance %",
+          data: imp.map(f=>f.pct), backgroundColor:"#8b5cf6", borderRadius:6 }]},
+        options:{ indexAxis:"y", responsive:true, maintainAspectRatio:true,
+          plugins:{ legend:{display:false}, tooltip:{callbacks:{label:(c)=>c.parsed.x+"%"}} },
+          scales:{ x:{ ticks:{ callback:(v)=>v+"%", font:{size:9} } }, y:{ ticks:{font:{size:9}} } } },
+      });
+    }
+
+    function showModal(job_id, d) {
+      const s = d.stats||{};
+      $("modal-title").textContent = `${s.best_model} · ${s.best_score}`;
+      $("modal-sub").textContent = `${d.task_type} model on ${s.rows} rows · test ${s.best_metric} = ${s.best_score}.`;
+      $("modal-download").href = `/report/${job_id}.pdf`;
+      $("modal").classList.remove("hidden");
+    }
+    function hideModal(){ $("modal").classList.add("hidden"); }
+    $("modal-close").addEventListener("click", () => { hideModal(); $("results").scrollIntoView({behavior:"smooth"}); });
+    $("modal").addEventListener("click", (e) => { if (e.target === $("modal")) hideModal(); });
+    $("modal-download").addEventListener("click", hideModal);
+
+    function start() {
+      if (!csvB64) { showErr("Upload a CSV first."); return; }
+      $("run").disabled = true; $("run-label").textContent = "Running";
+      $("spinner").classList.remove("hidden");
+      $("error").classList.add("hidden"); $("results").classList.add("hidden");
+      $("log").innerHTML = ""; $("progress").classList.remove("hidden");
+      renderAgents();
+
+      const proto = location.protocol === "https:" ? "wss" : "ws";
+      const ws = new WebSocket(`${proto}://${location.host}/ws/run`);
+      ws.onopen = () => ws.send(JSON.stringify({ csv_b64: csvB64, target: $("target").value }));
+      let prev = null;
+      ws.onmessage = (ev) => {
+        const m = JSON.parse(ev.data);
+        if (m.type === "progress") {
+          log(m.stage, m.message);
+          if (AGENTS.some(a=>a[0]===m.stage)) {
+            if (prev && prev !== m.stage) agentState(prev, "done");
+            agentState(m.stage, "active"); prev = m.stage;
+          } else if (m.stage === "done" && prev) agentState(prev, "done");
+        }
+        else if (m.type === "result") render(m.job_id, m.data);
+        else if (m.type === "error") showErr(m.message);
+      };
+      const done = () => { $("run").disabled = false; $("run-label").textContent = "Run pipeline"; $("spinner").classList.add("hidden"); };
+      ws.onclose = done;
+      ws.onerror = () => { showErr("Connection error. Is the server running?"); done(); };
+    }
+    function showErr(m){ $("error").textContent = "Error: " + m; $("error").classList.remove("hidden"); }
+
+    $("run").addEventListener("click", start);
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") hideModal(); });
+  </script>
+</body>
+</html>
