@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Marsa Supply Chain Intelligence & Risk Optimizer</title>
+  <meta name="description" content="Day 17 - Multi-Agent Supply Chain Risk Assessment and Logistics Routing Network Optimizer. Built by Marsa Empower.">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-container">
+      <div class="brand-section">
+        <div class="logo-icon">M</div>
+        <div class="brand-title">
+          <h1>Marsa Supply Chain Intelligence</h1>
+          <p>Multi-Agent Sourcing & Routing Optimizer — Day 17</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="status-badge">
+          <span class="status-dot"></span>
+          <span id="connection-status">System Ready</span>
+        </div>
+        <a href="https://maryam-piaic.vercel.app" target="_blank" class="creator-link">Maryam Mumtaz</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Grid -->
+  <main>
+    <div class="dashboard-grid">
+      
+      <!-- Left Panel: Input Configuration -->
+      <section class="left-panel">
+        
+        <!-- Sourcing Presets -->
+        <div class="card">
+          <div class="card-title">
+            <span>Sourcing Presets</span>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Choose a template</span>
+          </div>
+          <div class="presets-grid">
+            <button class="preset-btn active" onclick="loadPreset('smartphone')">Smartphone</button>
+            <button class="preset-btn" onclick="loadPreset('solar')">Solar Inverter</button>
+            <button class="preset-btn" onclick="loadPreset('automotive')">EV Controller</button>
+          </div>
+          
+          <div class="form-group">
+            <label for="product-name">Product Assembly Name</label>
+            <input type="text" id="product-name" value="QuantumX Smartphone" placeholder="e.g. Neo Smartwatch">
+          </div>
+        </div>
+
+        <!-- BOM Configurator -->
+        <div class="card">
+          <div class="card-title">
+            <span>Bill of Materials (BOM)</span>
+            <button class="btn btn-secondary btn-icon" onclick="addBomRow()">+ Add Part</button>
+          </div>
+          <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+            List key component details, costs, supplier assignments, and shipping origins.
+          </p>
+          <div class="list-editor" id="bom-list-editor">
+            <!-- Row structure added dynamically -->
+          </div>
+        </div>
+
+        <!-- Supplier Profiles -->
+        <div class="card">
+          <div class="card-title">
+            <span>Supplier Profiles</span>
+            <button class="btn btn-secondary btn-icon" onclick="addSupplierRow()">+ Add Supplier</button>
+          </div>
+          <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+            Evaluate suppliers' financial reserves, geopolitical stability index, and default logistics channel.
+          </p>
+          <div class="list-editor" id="supplier-list-editor">
+            <!-- Row structure added dynamically -->
+          </div>
+          
+          <button class="btn btn-primary" id="run-btn" onclick="triggerOptimization()">
+            Run Sourcing Optimizer
+          </button>
+        </div>
+
+      </section>
+
+      <!-- Right Panel: WebSocket Monitor & Live Visualizations -->
+      <section class="right-panel">
+        
+        <!-- Interactive Map Visualizer -->
+        <div class="card">
+          <div class="card-title">
+            <span>Sourcing Splicer & Logistics Network Map</span>
+            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">Destination Hub: Karachi, PK</span>
+          </div>
+          <div class="map-container">
+            <div class="map-placeholder" id="map-placeholder">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                <path d="M2 12h20"></path>
+              </svg>
+              <p>Configure BOM and click "Run Sourcing Optimizer" to plot the logistics grid routes.</p>
+            </div>
+            
+            <svg id="network-svg">
+              <!-- Rendered via JavaScript -->
+            </svg>
+            
+            <!-- Tooltip node -->
+            <div class="tooltip" id="map-tooltip"></div>
+          </div>
+        </div>
+
+        <!-- Real-Time WebSocket Console -->
+        <div class="card" id="terminal-card">
+          <div class="card-title">
+            <span>AI Agent Pipeline Log Stream</span>
+            <span id="terminal-badge" style="font-size: 0.75rem; color: var(--text-muted);">Idle</span>
+          </div>
+          
+          <div class="loader-container" id="ws-loader">
+            <div class="spinner"></div>
+            <span>AI Supply Chain Orchestrator is executing the 5-Agent network...</span>
+          </div>
+
+          <div class="terminal-console" id="log-console">
+            <div style="color: var(--text-muted)">Terminal ready. Awaiting connection triggers...</div>
+          </div>
+        </div>
+
+        <!-- Optimization Dashboard Results (Shown post-run) -->
+        <div id="results-dashboard" style="display: none;">
+          
+          <!-- Key KPI Cards -->
+          <div class="dashboard-kpi-container">
+            <div class="kpi-card kpi-risk">
+              <div class="kpi-lbl">Risk Index</div>
+              <div class="kpi-val" id="kpi-risk-index">--</div>
+              <div class="kpi-change" id="kpi-risk-change">--</div>
+            </div>
+            
+            <div class="kpi-card kpi-transit">
+              <div class="kpi-lbl">Logistics Transit</div>
+              <div class="kpi-val" id="kpi-lead-time">--</div>
+              <div class="kpi-change positive" id="kpi-lead-saved">--</div>
+            </div>
+            
+            <div class="kpi-card kpi-savings">
+              <div class="kpi-lbl">Est. BOM Savings</div>
+              <div class="kpi-val" id="kpi-savings">--</div>
+              <div class="kpi-change positive" id="kpi-savings-pct">--</div>
+            </div>
+            
+            <div class="kpi-card kpi-bom">
+              <div class="kpi-lbl">Optimized BOM</div>
+              <div class="kpi-val" id="kpi-bom-cost">--</div>
+              <div class="kpi-change" id="kpi-bom-change">--</div>
+            </div>
+          </div>
+
+          <!-- Tabbed results -->
+          <div class="card">
+            <div class="card-title">
+              <span>Sourcing Splicer Agent Report</span>
+              <button class="btn btn-primary btn-icon" id="pdf-download-btn" style="width: auto;">
+                📥 Download PDF Executive Report
+              </button>
+            </div>
+            
+            <div class="tab-container">
+              <button class="tab-btn active" onclick="switchTab(event, 'tab-risk')">1. Supplier Risk</button>
+              <button class="tab-btn" onclick="switchTab(event, 'tab-routing')">2. Sourcing Routing</button>
+              <button class="tab-btn" onclick="switchTab(event, 'tab-cost')">3. Sourcing Cost Analyst</button>
+              <button class="tab-btn" onclick="switchTab(event, 'tab-demand')">4. Demand Forecast</button>
+              <button class="tab-btn" onclick="switchTab(event, 'tab-disruption')">5. Disruption Alerts</button>
+            </div>
+
+            <!-- Tab 1: Supplier Risk -->
+            <div class="tab-content active" id="tab-risk">
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Component</th>
+                      <th>Supplier</th>
+                      <th>Origin</th>
+                      <th>Fin. Health</th>
+                      <th>Geopolitical</th>
+                      <th>ESG</th>
+                      <th>Risk Score</th>
+                      <th>Risk Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="risk-table-body"></tbody>
+                </table>
+              </div>
+              <div class="strategy-box">
+                <h4>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line>
+                  </svg>
+                  Supplier Risk Strategy Guide
+                </h4>
+                <p>Ensure any supplier labeled as "High Risk" has a secondary local supplier configured. Consider structuring forward purchase commitments for critical raw materials located in High risk geopolitical zones.</p>
+              </div>
+            </div>
+
+            <!-- Tab 2: Sourcing Routing -->
+            <div class="tab-content" id="tab-routing">
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Component</th>
+                      <th>Supplier</th>
+                      <th>Origin</th>
+                      <th>Ship Mode</th>
+                      <th>Original Transit (Days)</th>
+                      <th>Optimized Transit (Days)</th>
+                      <th>Alternative Route Splicing</th>
+                    </tr>
+                  </thead>
+                  <tbody id="routing-table-body"></tbody>
+                </table>
+              </div>
+              <div class="strategy-box">
+                <h4>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line>
+                  </svg>
+                  Lead Time Strategy Guide
+                </h4>
+                <p>Transit route calculations optimize for clearance hubs, moving slow maritime freight toward local express lanes and utilizing customs pre-clearance agreements to speed up border handshakes.</p>
+              </div>
+            </div>
+
+            <!-- Tab 3: Sourcing Cost Analyst -->
+            <div class="tab-content" id="tab-cost">
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Component</th>
+                      <th>Current Supplier (Cost)</th>
+                      <th>Suggested Alternative</th>
+                      <th>Alternative Cost</th>
+                      <th>Unit Savings</th>
+                      <th>Procurement Rationale</th>
+                    </tr>
+                  </thead>
+                  <tbody id="cost-table-body"></tbody>
+                </table>
+              </div>
+              <div class="strategy-box">
+                <h4>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line>
+                  </svg>
+                  Cost Sparing Strategy Guide
+                </h4>
+                <p>Local assembly components (like switching battery packs to Karachi Cell Tech) completely omit custom duties and lower carbon logistics footprints, netting significant financial savings despite minor operational setups.</p>
+              </div>
+            </div>
+
+            <!-- Tab 4: Demand Forecast -->
+            <div class="tab-content" id="tab-demand">
+              <div style="display: grid; grid-template-columns: 1fr 340px; gap: 1rem; align-items: start;">
+                <div>
+                  <h4 style="margin-bottom: 0.5rem; font-family: var(--font-heading); font-size: 0.9rem;">12-Month Production Demand Projections</h4>
+                  <div class="chart-container">
+                    <canvas id="demand-chart"></canvas>
+                  </div>
+                </div>
+                <div>
+                  <h4 style="margin-bottom: 0.5rem; font-family: var(--font-heading); font-size: 0.9rem;">Procurement ROP Triggers</h4>
+                  <div class="table-wrapper">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Component</th>
+                          <th>Safety Stock</th>
+                          <th>Reorder Point (ROP)</th>
+                        </tr>
+                      </thead>
+                      <tbody id="demand-table-body"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div class="strategy-box">
+                <h4>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line>
+                  </svg>
+                  Demand & Inventory Forecast Strategy
+                </h4>
+                <p id="demand-forecast-strategy-note">Establish triggers using computed safety margins. ROP represents the unit buffer where replenishment orders should launch to cover logistics lead time.</p>
+              </div>
+            </div>
+
+            <!-- Tab 5: Disruption Alerts -->
+            <div class="tab-content" id="tab-disruption">
+              <div class="alerts-list" id="disruption-list">
+                <!-- Disruption elements rendered here -->
+              </div>
+              <div class="strategy-box" style="margin-top: 1rem;">
+                <h4>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line>
+                  </svg>
+                  Disruption Mitigation Action
+                </h4>
+                <p>For high-impact weather or strikes flagged in China or Europe, trigger inventory buffer pulls, delaying non-essential component tooling cycles and rerouting through secondary shipping portals.</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+      
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <p>Marsa Empower Sourcing Hub — Developed by <a href="https://github.com/MaryamMumtaz-piaic" target="_blank">Maryam Mumtaz</a>. All rights reserved.</p>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
