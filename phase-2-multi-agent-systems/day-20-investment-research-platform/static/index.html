@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Day 20 — AI Investment Research Platform</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="/static/index.css">
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- TradingView Widget Script -->
+  <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Header Navbar -->
+    <header class="app-header">
+      <div class="brand-badge">
+        <div class="brand-icon">
+          <i class="fa-solid fa-chart-pie"></i>
+        </div>
+        <div class="brand-title">
+          <h1>AI Investment Research Terminal</h1>
+          <p>Hedge-Fund-Grade Multi-Agent Analysis by Maryam Mumtaz</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <span class="status-chip active"><i class="fa-solid fa-satellite-dish"></i> Live Market Data</span>
+      </div>
+    </header>
+
+    <div class="dashboard-grid">
+      <!-- Left Column: Input Panel -->
+      <div class="sidebar">
+        <div class="panel-card glass">
+          <div class="panel-title">
+            <i class="fa-solid fa-magnifying-glass-chart" style="color: var(--primary);"></i> Research Target
+          </div>
+
+          <form id="researchForm" onsubmit="handleFormSubmit(event)">
+            <div class="form-group">
+              <label for="tickerInput">Enter Stock Ticker (e.g. AAPL, TSLA, NVDA)</label>
+              <input type="text" id="tickerInput" class="form-control" placeholder="TICKER" required style="text-transform: uppercase;">
+            </div>
+
+            <div class="presets-label">
+              <i class="fa-solid fa-bolt"></i> Quick Analysis
+            </div>
+            <div class="preset-pills">
+              <button type="button" class="preset-btn" onclick="setTicker('NVDA')"><strong>NVDA</strong> (NVIDIA Corp)</button>
+              <button type="button" class="preset-btn" onclick="setTicker('PLTR')"><strong>PLTR</strong> (Palantir Tech)</button>
+              <button type="button" class="preset-btn" onclick="setTicker('MSFT')"><strong>MSFT</strong> (Microsoft)</button>
+            </div>
+
+            <button type="submit" id="submitBtn" class="btn-primary">
+              <i class="fa-solid fa-microchip"></i> Run Agent Crew
+            </button>
+          </form>
+        </div>
+
+        <!-- Agent Execution Progress Box -->
+        <div id="progressBox" class="panel-card glass" style="display: none; margin-top: 24px;">
+          <h4 style="margin-bottom: 16px; font-weight: 700; color: var(--primary);"><i class="fa-solid fa-gears"></i> Deploying 6 Agents...</h4>
+          <div id="step1" class="agent-step">
+            <div class="step-indicator">1</div> <span>Data Retrieval Agent</span>
+          </div>
+          <div id="step2" class="agent-step">
+            <div class="step-indicator">2</div> <span>Financial Statement Analyst</span>
+          </div>
+          <div id="step3" class="agent-step">
+            <div class="step-indicator">3</div> <span>Market Sentiment Agent</span>
+          </div>
+          <div id="step4" class="agent-step">
+            <div class="step-indicator">4</div> <span>Technical Analyst Agent</span>
+          </div>
+          <div id="step5" class="agent-step">
+            <div class="step-indicator">5</div> <span>DCF Valuation Agent</span>
+          </div>
+          <div id="step6" class="agent-step">
+            <div class="step-indicator">6</div> <span>Investment Thesis Writer</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Results Dashboard -->
+      <div class="main-content">
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state glass">
+          <div class="empty-state-icon"><i class="fa-solid fa-chart-line"></i></div>
+          <h3>Awaiting Ticker Input</h3>
+          <p>Enter a stock symbol to launch the Multi-Agent Crew for a comprehensive SEC filing review, DCF valuation, and sentiment analysis.</p>
+        </div>
+
+        <!-- Active Dashboard -->
+        <div id="activeDashboard" style="display: none;">
+          <!-- Top Hero Card (Price & Rec) -->
+          <div class="hero-card glass">
+            <div class="hero-left">
+              <div class="ticker-badge" id="resTicker">AAPL</div>
+              <div class="company-name" id="resCompany">Apple Inc.</div>
+            </div>
+            <div class="hero-right">
+              <div class="price-box">
+                <span class="price-label">Current Price</span>
+                <span class="price-value" id="resPrice">$0.00</span>
+              </div>
+              <div class="price-box highlight">
+                <span class="price-label">DCF Fair Value</span>
+                <span class="price-value" id="resFairValue">$0.00</span>
+              </div>
+              <div class="rec-badge" id="resRec">BUY</div>
+            </div>
+          </div>
+
+          <!-- TradingView Chart Widget Container -->
+          <div class="chart-container glass" id="tv_chart_container"></div>
+
+          <!-- 3 Column Metrics Grid -->
+          <div class="metrics-grid">
+            <!-- Financial Health -->
+            <div class="metric-card glass">
+              <h4 class="card-title"><i class="fa-solid fa-file-invoice-dollar"></i> Financial Health</h4>
+              <ul class="data-list">
+                <li><span>P/E Ratio</span> <strong id="peRatio">-</strong></li>
+                <li><span>Debt to Equity</span> <strong id="deRatio">-</strong></li>
+                <li><span>Current Ratio</span> <strong id="currentRatio">-</strong></li>
+                <li><span>FCF Yield</span> <strong id="fcfYield">-</strong></li>
+                <li><span>Rev Growth (YoY)</span> <strong id="revGrowth">-</strong></li>
+              </ul>
+            </div>
+
+            <!-- Market Sentiment -->
+            <div class="metric-card glass">
+              <h4 class="card-title"><i class="fa-solid fa-users-viewfinder"></i> Market Sentiment</h4>
+              <div class="sentiment-score-box">
+                <div class="score-circle" id="sentScore">85</div>
+                <div class="score-label">Sentiment Index</div>
+              </div>
+              <ul class="data-list" style="margin-top: 12px;">
+                <li><span>News Tone</span> <strong id="newsTone">-</strong></li>
+                <li><span>Social Mentions (24h)</span> <strong id="socialMentions">-</strong></li>
+              </ul>
+            </div>
+
+            <!-- Technical Analysis -->
+            <div class="metric-card glass">
+              <h4 class="card-title"><i class="fa-solid fa-chart-candlestick"></i> Technicals</h4>
+              <ul class="data-list">
+                <li><span>50-Day Trend</span> <strong id="trend50">-</strong></li>
+                <li><span>RSI (14)</span> <strong id="rsi14">-</strong></li>
+                <li><span>MACD Signal</span> <strong id="macdSignal">-</strong></li>
+                <li><span>Active Pattern</span> <strong id="activePattern">-</strong></li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Investment Thesis -->
+          <div class="thesis-card glass">
+            <h4 class="card-title"><i class="fa-solid fa-robot"></i> AI Investment Thesis</h4>
+            <p id="thesisText" class="thesis-text">Loading...</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let tvWidget = null;
+
+    function setTicker(ticker) {
+      document.getElementById('tickerInput').value = ticker;
+    }
+
+    async function handleFormSubmit(e) {
+      e.preventDefault();
+      const ticker = document.getElementById("tickerInput").value.trim().toUpperCase();
+      if (!ticker) return;
+
+      // UI States
+      document.getElementById("submitBtn").disabled = true;
+      document.getElementById("submitBtn").innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Researching...';
+      document.getElementById("progressBox").style.display = "block";
+      document.getElementById("emptyState").style.display = "none";
+      document.getElementById("activeDashboard").style.display = "none";
+
+      resetSteps();
+      animateSteps();
+
+      try {
+        const response = await fetch("/api/research", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ticker: ticker })
+        });
+
+        const res = await response.json();
+        if (res.status === "success") {
+          renderDashboard(res.data);
+          renderChart(ticker);
+        } else {
+          alert("Error: " + (res.detail || "Unknown error"));
+        }
+      } catch (err) {
+        alert("Server error: " + err.message);
+      } finally {
+        document.getElementById("submitBtn").disabled = false;
+        document.getElementById("submitBtn").innerHTML = '<i class="fa-solid fa-microchip"></i> Run Agent Crew';
+      }
+    }
+
+    function resetSteps() {
+      for (let i = 1; i <= 6; i++) {
+        const el = document.getElementById(`step${i}`);
+        el.className = "agent-step";
+        el.querySelector(".step-indicator").innerHTML = i;
+      }
+    }
+
+    function animateSteps() {
+      let step = 1;
+      const interval = setInterval(() => {
+        if (step > 1) {
+          const prev = document.getElementById(`step${step - 1}`);
+          prev.className = "agent-step completed";
+          prev.querySelector(".step-indicator").innerHTML = '<i class="fa-solid fa-check"></i>';
+        }
+        if (step <= 6) {
+          const curr = document.getElementById(`step${step}`);
+          curr.className = "agent-step active";
+        } else {
+          clearInterval(interval);
+        }
+        step++;
+      }, 400); // Fast mock animation
+    }
+
+    function renderDashboard(data) {
+      document.getElementById("progressBox").style.display = "none";
+      document.getElementById("activeDashboard").style.display = "block";
+
+      // Hero
+      document.getElementById("resTicker").innerText = data.ticker;
+      document.getElementById("resCompany").innerText = data.company_name;
+      document.getElementById("resPrice").innerText = `$${data.current_price}`;
+      document.getElementById("resFairValue").innerText = `$${data.dcf_fair_value}`;
+      
+      const recBadge = document.getElementById("resRec");
+      recBadge.innerText = data.recommendation;
+      recBadge.className = `rec-badge ${data.recommendation}`;
+
+      // Financials
+      document.getElementById("peRatio").innerText = data.financial_health.pe_ratio;
+      document.getElementById("deRatio").innerText = data.financial_health.debt_to_equity;
+      document.getElementById("currentRatio").innerText = data.financial_health.current_ratio;
+      document.getElementById("fcfYield").innerText = data.financial_health.fcf_yield;
+      document.getElementById("revGrowth").innerText = data.financial_health.revenue_growth;
+
+      // Sentiment
+      document.getElementById("sentScore").innerText = data.market_sentiment.overall_score;
+      document.getElementById("newsTone").innerText = data.market_sentiment.news_tone;
+      document.getElementById("socialMentions").innerText = data.market_sentiment.social_mentions_24h.toLocaleString();
+
+      // Technicals
+      document.getElementById("trend50").innerText = data.technical_analysis.trend_50d;
+      document.getElementById("rsi14").innerText = data.technical_analysis.rsi_14;
+      document.getElementById("macdSignal").innerText = data.technical_analysis.macd_signal;
+      document.getElementById("activePattern").innerText = data.technical_analysis.pattern_detected;
+
+      // Thesis
+      document.getElementById("thesisText").innerText = data.investment_thesis;
+    }
+
+    function renderChart(ticker) {
+      document.getElementById("tv_chart_container").innerHTML = "";
+      new TradingView.widget({
+        "width": "100%",
+        "height": 400,
+        "symbol": `NASDAQ:${ticker}`,
+        "interval": "D",
+        "timezone": "Etc/UTC",
+        "theme": "light",
+        "style": "1",
+        "locale": "en",
+        "enable_publishing": false,
+        "backgroundColor": "rgba(255, 255, 255, 0)",
+        "gridColor": "rgba(42, 46, 57, 0.06)",
+        "hide_top_toolbar": true,
+        "hide_legend": true,
+        "save_image": false,
+        "container_id": "tv_chart_container"
+      });
+    }
+  </script>
+</body>
+</html>

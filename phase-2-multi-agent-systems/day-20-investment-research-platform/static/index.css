@@ -1,0 +1,196 @@
+/* Ultra Premium Light Theme for AI Investment Platform */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+:root {
+  /* Color Palette */
+  --bg-main: #f3f5f9;
+  --bg-gradient: radial-gradient(circle at top left, #ffffff 0%, #f0f3f8 100%);
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-light: #e0e7ff;
+  
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  
+  --buy: #10b981;
+  --buy-bg: #d1fae5;
+  --sell: #ef4444;
+  --sell-bg: #fee2e2;
+  --hold: #f59e0b;
+  --hold-bg: #fef3c7;
+
+  --shadow-soft: 0 10px 25px -5px rgba(0, 0, 0, 0.04), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+  --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+  --radius: 16px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-gradient);
+  color: var(--text-main);
+  min-height: 100vh;
+  padding-bottom: 60px;
+}
+
+.app-container {
+  max-width: 1350px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* Glassmorphism Utility */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-soft);
+  border-radius: var(--radius);
+}
+
+/* Header */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  margin-bottom: 24px;
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: var(--shadow-soft);
+}
+
+.brand-badge { display: flex; align-items: center; gap: 14px; }
+.brand-icon {
+  width: 44px; height: 44px;
+  background: linear-gradient(135deg, var(--primary), #818cf8);
+  color: white; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+.brand-title h1 { font-family: 'Space Grotesk', sans-serif; font-size: 1.3rem; font-weight: 700; letter-spacing: -0.02em; }
+.brand-title p { font-size: 0.85rem; color: var(--text-muted); }
+
+.status-chip {
+  background: var(--buy-bg); color: var(--buy);
+  padding: 6px 14px; border-radius: 99px;
+  font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 6px;
+}
+.status-chip i { animation: pulse 2s infinite; }
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+/* Grid Layout */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 24px;
+}
+@media (max-width: 992px) { .dashboard-grid { grid-template-columns: 1fr; } }
+
+/* Sidebar */
+.panel-card { padding: 24px; transition: var(--transition); }
+.panel-card:hover { box-shadow: var(--shadow-hover); }
+.panel-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+.form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
+.form-control {
+  width: 100%; padding: 12px 16px;
+  border: 2px solid #e2e8f0; border-radius: 12px;
+  font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; font-weight: 600;
+  transition: var(--transition); background: white; margin-bottom: 20px;
+}
+.form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-light); }
+
+.presets-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+.preset-pills { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+.preset-btn {
+  background: rgba(255,255,255,0.5); border: 1px solid #e2e8f0; padding: 10px 14px;
+  border-radius: 10px; text-align: left; cursor: pointer; transition: var(--transition);
+  font-size: 0.85rem; color: var(--text-main);
+}
+.preset-btn:hover { border-color: var(--primary); background: white; transform: translateX(4px); }
+
+.btn-primary {
+  width: 100%; padding: 14px;
+  background: var(--primary); color: white;
+  border: none; border-radius: 12px;
+  font-weight: 700; font-size: 0.95rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: var(--transition); box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+.btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 8px 16px rgba(79, 70, 229, 0.4); }
+.btn-primary:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+
+/* Progress */
+.agent-step { display: flex; align-items: center; gap: 12px; padding: 8px 0; font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+.agent-step.active { color: var(--primary); }
+.agent-step.completed { color: var(--buy); }
+.step-indicator {
+  width: 20px; height: 20px; border-radius: 50%; border: 2px solid #cbd5e1;
+  display: flex; align-items: center; justify-content: center; font-size: 10px;
+}
+.agent-step.active .step-indicator { border-color: var(--primary); border-top-color: transparent; animation: spin 1s linear infinite; }
+.agent-step.completed .step-indicator { background: var(--buy); border-color: var(--buy); color: white; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Main Dashboard */
+.main-content { display: flex; flex-direction: column; gap: 24px; }
+
+.empty-state { text-align: center; padding: 60px 20px; border: 2px dashed #cbd5e1; }
+.empty-state-icon { font-size: 48px; color: var(--text-muted); margin-bottom: 16px; opacity: 0.5; }
+.empty-state h3 { font-size: 1.2rem; margin-bottom: 8px; }
+
+/* Hero Card */
+.hero-card { display: flex; justify-content: space-between; align-items: center; padding: 24px 32px; }
+.ticker-badge { font-family: 'Space Grotesk', sans-serif; font-size: 2.5rem; font-weight: 800; line-height: 1; letter-spacing: -0.03em; }
+.company-name { font-size: 1rem; color: var(--text-muted); font-weight: 600; margin-top: 4px; }
+.hero-right { display: flex; align-items: center; gap: 32px; }
+
+.price-box { display: flex; flex-direction: column; text-align: right; }
+.price-label { font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); }
+.price-value { font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; font-weight: 700; }
+.price-box.highlight .price-value { color: var(--primary); font-size: 1.8rem; }
+
+.rec-badge {
+  padding: 10px 24px; border-radius: 12px; font-weight: 800; font-size: 1.2rem; font-family: 'Space Grotesk', sans-serif;
+}
+.rec-badge.BUY { background: var(--buy-bg); color: var(--buy); }
+.rec-badge.SELL { background: var(--sell-bg); color: var(--sell); }
+.rec-badge.HOLD { background: var(--hold-bg); color: var(--hold); }
+
+/* Chart */
+.chart-container { height: 400px; padding: 12px; overflow: hidden; border-radius: var(--radius); }
+
+/* Metrics Grid */
+.metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+@media (max-width: 1200px) { .metrics-grid { grid-template-columns: 1fr; } }
+
+.metric-card { padding: 24px; }
+.card-title { font-size: 1rem; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; color: var(--primary); }
+
+.data-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.data-list li { display: flex; justify-content: space-between; font-size: 0.9rem; border-bottom: 1px dashed #e2e8f0; padding-bottom: 4px; }
+.data-list li span { color: var(--text-muted); font-weight: 500; }
+.data-list li strong { font-weight: 700; color: var(--text-main); }
+
+.sentiment-score-box { display: flex; flex-direction: column; align-items: center; margin: 16px 0; }
+.score-circle {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: conic-gradient(var(--primary) 85%, #e2e8f0 0);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Space Grotesk', sans-serif; font-size: 2rem; font-weight: 800; color: var(--primary);
+  box-shadow: inset 0 0 0 8px white; border: 1px solid #e2e8f0;
+}
+.score-label { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-top: 8px; text-transform: uppercase; }
+
+/* Thesis Card */
+.thesis-card { padding: 24px 32px; }
+.thesis-text { font-size: 1.05rem; line-height: 1.7; color: #334155; font-weight: 500; }
