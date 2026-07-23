@@ -96,10 +96,10 @@ class SecurityAuditAgent:
     async def _llm_url(self, url: str, scan: dict) -> dict:
         prompt = (
             "You are a web security auditor performing an AUTHORIZED defensive review. "
-            "Given the HTTP scan results below, add any additional posture findings NOT "
-            "already covered (e.g. mixed content risk, caching of sensitive data, weak TLS "
-            "expectations) and write an overall assessment. Do NOT repeat the header findings "
-            "already listed. Return ONLY JSON in this exact shape:\n"
+            "Given the HTTP scan results below, evaluate the security posture. "
+            "ONLY add additional findings if they can be strictly inferred from the provided headers and scan data. "
+            "DO NOT hallucinate, guess, or invent vulnerabilities (like XSS, SQLi, etc.) that you cannot prove from the provided scan data. "
+            "Do NOT repeat the header findings already listed. Return ONLY JSON in this exact shape:\n"
             "{\n"
             '  "summary": "2-3 sentence overall security posture assessment",\n'
             '  "findings": [\n'
@@ -170,7 +170,7 @@ class SecurityAuditAgent:
             "  ],\n"
             '  "recommendations": ["prioritized remediation step"]\n'
             "}\n"
-            "Only report real issues; do not invent vulnerabilities. Use line numbers from the "
+            "Only report real issues based strictly on the provided code; do not invent or hallucinate vulnerabilities. Use line numbers from the "
             "code as given (1-indexed).\n"
             f"{lang}\n\n--- CODE ---\n{_number_lines(code)}"
         )
