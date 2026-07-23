@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Day 21 — Multi-Tenant RAG Enterprise Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/index.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand-badge">
+        <div class="brand-icon"><i class="fa-solid fa-layer-group"></i></div>
+        <div class="brand-title">
+          <h1>Multi-Tenant RAG Platform</h1>
+          <p>Isolated Enterprise Knowledge Assistants by Maryam Mumtaz</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <span class="status-chip active"><i class="fa-solid fa-shield-halved"></i> Data Isolation Active</span>
+      </div>
+    </header>
+
+    <div class="dashboard-grid">
+      <!-- Sidebar: Tenant Switcher -->
+      <div class="sidebar">
+        <div class="panel-card glass">
+          <div class="panel-title">
+            <i class="fa-solid fa-building" style="color: var(--primary);"></i> Tenant Workspaces
+          </div>
+          <p class="sidebar-hint">Each tenant has an isolated vector store, custom persona &amp; usage quota.</p>
+          <div id="tenantList" class="tenant-list">
+            <div class="tenant-loading"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading tenants...</div>
+          </div>
+        </div>
+
+        <!-- Active Tenant Knowledge Base -->
+        <div id="kbBox" class="panel-card glass" style="display: none; margin-top: 24px;">
+          <div class="panel-title">
+            <i class="fa-solid fa-database" style="color: var(--primary);"></i> Knowledge Base
+          </div>
+          <ul id="sourceList" class="source-list"></ul>
+        </div>
+      </div>
+
+      <!-- Main: Chat + Analytics -->
+      <div class="main-content">
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state glass">
+          <div class="empty-state-icon"><i class="fa-solid fa-comments"></i></div>
+          <h3>Select a Tenant Workspace</h3>
+          <p>Choose a company from the left to chat with its branded, isolated AI assistant. Answers are grounded only in that tenant's private documents.</p>
+        </div>
+
+        <!-- Active Workspace -->
+        <div id="workspace" style="display: none;">
+          <!-- Persona Hero -->
+          <div class="hero-card glass" id="personaHero">
+            <div class="hero-left">
+              <div class="persona-avatar" id="personaAvatar"><i class="fa-solid fa-robot"></i></div>
+              <div>
+                <div class="tenant-name" id="tenantName">—</div>
+                <div class="persona-name" id="personaName">—</div>
+              </div>
+            </div>
+            <div class="hero-right">
+              <div class="usage-mini">
+                <span class="usage-label">Quota Used</span>
+                <div class="quota-bar"><div id="quotaFill" class="quota-fill"></div></div>
+                <span class="usage-val" id="quotaText">0 / 0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chat Window -->
+          <div class="chat-card glass">
+            <div id="chatLog" class="chat-log">
+              <div class="chat-placeholder">Ask a question grounded in this tenant's knowledge base.</div>
+            </div>
+            <form id="queryForm" class="chat-input-row" onsubmit="handleQuery(event)">
+              <input type="text" id="questionInput" class="chat-input" placeholder="Ask the assistant..." autocomplete="off" required>
+              <button type="submit" id="sendBtn" class="btn-send"><i class="fa-solid fa-paper-plane"></i></button>
+            </form>
+          </div>
+
+          <!-- Analytics Grid -->
+          <div class="metrics-grid">
+            <div class="metric-card glass">
+              <h4 class="card-title"><i class="fa-solid fa-quote-left"></i> Retrieved Citations</h4>
+              <div id="citationList" class="citation-list">
+                <p class="muted-note">Citations from the last query appear here.</p>
+              </div>
+            </div>
+            <div class="metric-card glass">
+              <h4 class="card-title"><i class="fa-solid fa-gauge-high"></i> Usage Analytics</h4>
+              <ul class="data-list">
+                <li><span>Answer Source</span> <strong id="ansSource">-</strong></li>
+                <li><span>Retrieval Score</span> <strong id="retScore">-</strong></li>
+                <li><span>KB Entries</span> <strong id="kbEntries">-</strong></li>
+                <li><span>Sources Cited</span> <strong id="srcCited">-</strong></li>
+                <li><span>Isolation Verified</span> <strong id="isoVerified">-</strong></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let tenants = [];
+    let activeTenant = null;
+
+    async function loadTenants() {
+      try {
+        const res = await fetch("/api/tenants");
+        const json = await res.json();
+        tenants = json.data;
+        renderTenantList();
+      } catch (err) {
+        document.getElementById("tenantList").innerHTML =
+          '<div class="tenant-loading">Failed to load tenants.</div>';
+      }
+    }
+
+    function renderTenantList() {
+      const list = document.getElementById("tenantList");
+      list.innerHTML = "";
+      tenants.forEach(t => {
+        const el = document.createElement("button");
+        el.className = "tenant-btn";
+        el.style.setProperty("--accent", t.accent);
+        el.onclick = () => selectTenant(t.id);
+        el.innerHTML = `
+          <span class="tenant-dot" style="background:${t.accent}"></span>
+          <span class="tenant-meta">
+            <strong>${t.name}</strong>
+            <small>${t.source_count} sources · ${t.quota.toLocaleString()} tok/mo</small>
+          </span>`;
+        el.dataset.id = t.id;
+        list.appendChild(el);
+      });
+    }
+
+    function selectTenant(id) {
+      activeTenant = tenants.find(t => t.id === id);
+      if (!activeTenant) return;
+
+      document.querySelectorAll(".tenant-btn").forEach(b =>
+        b.classList.toggle("active", b.dataset.id === id));
+
+      const accent = activeTenant.accent;
+      document.documentElement.style.setProperty("--primary", accent);
+
+      document.getElementById("emptyState").style.display = "none";
+      document.getElementById("workspace").style.display = "block";
+      document.getElementById("kbBox").style.display = "block";
+
+      document.getElementById("tenantName").innerText = activeTenant.name;
+      document.getElementById("personaName").innerText = activeTenant.persona;
+      document.getElementById("personaAvatar").style.background =
+        `linear-gradient(135deg, ${accent}, ${accent}aa)`;
+
+      // Sources
+      const sl = document.getElementById("sourceList");
+      sl.innerHTML = "";
+      activeTenant.sources.forEach(s => {
+        const li = document.createElement("li");
+        const icon = s.startsWith("http") ? "fa-link"
+          : s.startsWith("Notion") ? "fa-n"
+          : s.endsWith(".pdf") ? "fa-file-pdf"
+          : s.endsWith(".docx") ? "fa-file-word"
+          : s.endsWith(".csv") || s.endsWith(".xlsx") ? "fa-file-csv"
+          : "fa-file-lines";
+        li.innerHTML = `<i class="fa-solid ${icon}"></i> ${s}`;
+        sl.appendChild(li);
+      });
+
+      // Reset chat & analytics
+      document.getElementById("chatLog").innerHTML =
+        '<div class="chat-placeholder">Ask a question grounded in ' + activeTenant.name + "'s knowledge base.</div>";
+      document.getElementById("citationList").innerHTML =
+        '<p class="muted-note">Citations from the last query appear here.</p>';
+      ["ansSource","retScore","kbEntries","srcCited","isoVerified"].forEach(idv =>
+        document.getElementById(idv).innerText = "-");
+      document.getElementById("quotaFill").style.width = "0%";
+      document.getElementById("quotaText").innerText = activeTenant.source_count + " KB entries";
+    }
+
+    function addMessage(role, text) {
+      const log = document.getElementById("chatLog");
+      const ph = log.querySelector(".chat-placeholder");
+      if (ph) ph.remove();
+      const div = document.createElement("div");
+      div.className = `chat-msg ${role}`;
+      div.innerHTML = `<div class="bubble">${text}</div>`;
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+      return div;
+    }
+
+    async function handleQuery(e) {
+      e.preventDefault();
+      if (!activeTenant) return;
+      const input = document.getElementById("questionInput");
+      const q = input.value.trim();
+      if (!q) return;
+
+      addMessage("user", q);
+      input.value = "";
+      const btn = document.getElementById("sendBtn");
+      btn.disabled = true;
+
+      const thinking = addMessage("bot", '<i class="fa-solid fa-circle-notch fa-spin"></i> Retrieving from isolated store...');
+
+      try {
+        const res = await fetch("/api/query", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tenant_id: activeTenant.id, question: q })
+        });
+        const json = await res.json();
+        if (json.status === "success") {
+          renderAnswer(thinking, json.data);
+        } else {
+          thinking.querySelector(".bubble").innerText = "Error: " + (json.detail || "Unknown");
+        }
+      } catch (err) {
+        thinking.querySelector(".bubble").innerText = "Server error: " + err.message;
+      } finally {
+        btn.disabled = false;
+        input.focus();
+      }
+    }
+
+    function renderAnswer(thinkingEl, data) {
+      const fromRag = data.answer_source === "rag_memory";
+      const badge = fromRag
+        ? '<span class="src-tag rag"><i class="fa-solid fa-database"></i> from RAG memory</span>'
+        : '<span class="src-tag llm"><i class="fa-solid fa-cloud-arrow-down"></i> generated by LLM &amp; imported to RAG</span>';
+      thinkingEl.querySelector(".bubble").innerHTML =
+        `<div class="bubble-text">${data.answer}</div>${badge}`;
+
+      // Citations
+      const cl = document.getElementById("citationList");
+      cl.innerHTML = "";
+      data.citations.forEach(c => {
+        const div = document.createElement("div");
+        div.className = "citation-item";
+        div.innerHTML = `
+          <div class="citation-head">
+            <span class="citation-src">${c.source}</span>
+            <span class="citation-score">${Math.round(c.relevance * 100)}%</span>
+          </div>
+          <p class="citation-chunk">${c.chunk}</p>`;
+        cl.appendChild(div);
+      });
+
+      // Usage
+      const u = data.usage;
+      document.getElementById("ansSource").innerHTML = fromRag
+        ? '<span style="color:var(--primary)">RAG Memory</span>'
+        : '<span style="color:var(--hold, #b45309)">LLM → imported</span>';
+      document.getElementById("retScore").innerText = u.retrieval_score;
+      document.getElementById("kbEntries").innerText = u.kb_entries;
+      document.getElementById("srcCited").innerText = u.sources_cited;
+      document.getElementById("isoVerified").innerHTML = u.isolation_verified
+        ? '<span style="color:var(--buy)"><i class="fa-solid fa-circle-check"></i> Yes</span>'
+        : '<span style="color:var(--sell)">No</span>';
+
+      // Reflect that the KB grew when an LLM answer was imported.
+      const t = tenants.find(x => x.id === data.tenant_id);
+      if (t) t.source_count = u.kb_entries;
+      document.getElementById("quotaText").innerText = u.kb_entries + " KB entries";
+    }
+
+    loadTenants();
+  </script>
+</body>
+</html>

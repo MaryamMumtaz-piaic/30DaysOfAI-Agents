@@ -11,11 +11,14 @@ A production multi-tenant RAG system. Companies sign up, upload private knowledg
 
 ## ✨ Key Features
 
-- Multi-tenant architecture with complete data isolation
-- Support for PDF, Word, URLs, Notion, and CSV uploads
+- Multi-tenant architecture with complete data isolation (per-tenant knowledge store)
+- **RAG-first routing with LLM fallback + auto-import**: a question is first answered
+  from the tenant's RAG memory; if no relevant data exists, the OpenAI LLM generates
+  the answer and it is written back into that tenant's memory, so the same question
+  becomes a cache hit next time (the knowledge base grows itself)
 - Per-tenant custom AI personas and system prompts
-- REST API with JWT auth for external integration
-- Usage analytics dashboard (queries, tokens, sources cited)
+- Live analytics: answer source (RAG vs LLM), retrieval score, KB size, citations
+- Isolation verified per query — one tenant's imported answers never leak to another
 
 ## 🛠️ Tech Stack
 
@@ -28,13 +31,13 @@ cd phase-3-enterprise-ai-platforms/day-21-multi-tenant-rag-platform
 python -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-cp ../../.env.example .env       # add your API keys
-docker compose up --build
+cp .env.example .env             # add your API keys
+python main.py                   # serves at http://127.0.0.1:8021
 ```
 
 ## 📌 Status
 
-🚧 In development
+✅ Working demo — FastAPI backend with a simulated per-tenant RAG pipeline and a branded, isolated chat dashboard (tenant switcher, live citations, and usage/quota analytics).
 
 ---
 

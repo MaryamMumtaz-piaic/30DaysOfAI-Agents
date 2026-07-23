@@ -1,0 +1,13 @@
+# Runtime deps
+fastapi>=0.104
+uvicorn>=0.24
+pydantic>=2.5
+python-dotenv>=1.0
+openai>=1.3          # LLM fallback when RAG memory has no data
+
+# --- Optional heavier RAG stack (real vector store instead of JSON) ---
+# Needs a C toolchain on Windows (numpy/chromadb build from source).
+# langchain>=0.1
+# chromadb>=0.4
+# pypdf>=3.17
+# python-docx>=1.1

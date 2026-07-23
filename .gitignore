@@ -9,6 +9,10 @@ token.json
 secrets/
 service-account*.json
 
+# ─── Auto-generated RAG stores ───────────────────────────
+rag_store/
+chroma_store/
+
 # ─── Python ──────────────────────────────────────────────
 __pycache__/
 *.py[cod]
