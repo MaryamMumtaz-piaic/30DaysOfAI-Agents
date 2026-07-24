@@ -25,13 +25,22 @@ class QueryRequest(BaseModel):
     question: str
 
 
+def _serve(filename: str, fallback: str) -> HTMLResponse:
+    path = os.path.join(static_dir, filename)
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    return HTMLResponse(content=fallback)
+
+
 @app.get("/", response_class=HTMLResponse)
 async def serve_index():
-    index_path = os.path.join(static_dir, "index.html")
-    if os.path.exists(index_path):
-        with open(index_path, "r", encoding="utf-8") as f:
-            return HTMLResponse(content=f.read())
-    return HTMLResponse(content="<h1>Day 21 Multi-Tenant RAG Platform Running</h1>")
+    return _serve("index.html", "<h1>Day 21 Multi-Tenant RAG Platform Running</h1>")
+
+
+@app.get("/chat", response_class=HTMLResponse)
+async def serve_chat():
+    return _serve("chat.html", "<h1>Chat page not found</h1>")
 
 
 @app.get("/api/tenants")

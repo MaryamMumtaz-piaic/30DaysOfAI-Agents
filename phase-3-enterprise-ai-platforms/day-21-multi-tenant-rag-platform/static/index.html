@@ -12,275 +12,183 @@
 </head>
 <body>
 
-  <div class="app-container">
-    <!-- Header -->
-    <header class="app-header">
-      <div class="brand-badge">
-        <div class="brand-icon"><i class="fa-solid fa-layer-group"></i></div>
-        <div class="brand-title">
-          <h1>Multi-Tenant RAG Platform</h1>
-          <p>Isolated Enterprise Knowledge Assistants by Maryam Mumtaz</p>
-        </div>
+  <!-- ═══════════════ NAVBAR ═══════════════ -->
+  <nav class="navbar">
+    <div class="nav-inner">
+      <a href="#top" class="nav-brand">
+        <span class="nav-logo"><i class="fa-solid fa-layer-group"></i></span>
+        <span class="nav-brand-text">RAG<span>Suite</span></span>
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#how">How it works</a>
+        <a href="/chat">Live Demo</a>
       </div>
-      <div class="header-right">
-        <span class="status-chip active"><i class="fa-solid fa-shield-halved"></i> Data Isolation Active</span>
+      <div class="nav-actions">
+        <span class="nav-status"><span class="dot"></span> Isolation Active</span>
+        <a href="/chat" class="btn-nav">Open Chat</a>
       </div>
-    </header>
+    </div>
+  </nav>
 
-    <div class="dashboard-grid">
-      <!-- Sidebar: Tenant Switcher -->
-      <div class="sidebar">
-        <div class="panel-card glass">
-          <div class="panel-title">
-            <i class="fa-solid fa-building" style="color: var(--primary);"></i> Tenant Workspaces
-          </div>
-          <p class="sidebar-hint">Each tenant has an isolated vector store, custom persona &amp; usage quota.</p>
-          <div id="tenantList" class="tenant-list">
-            <div class="tenant-loading"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading tenants...</div>
-          </div>
-        </div>
+  <div id="top"></div>
 
-        <!-- Active Tenant Knowledge Base -->
-        <div id="kbBox" class="panel-card glass" style="display: none; margin-top: 24px;">
-          <div class="panel-title">
-            <i class="fa-solid fa-database" style="color: var(--primary);"></i> Knowledge Base
-          </div>
-          <ul id="sourceList" class="source-list"></ul>
-        </div>
+  <!-- ═══════════════ HERO ═══════════════ -->
+  <header class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+      <span class="hero-pill"><i class="fa-solid fa-bolt"></i> Self-growing knowledge base</span>
+      <h1 class="hero-title">
+        One platform. <span class="grad">Isolated AI assistants</span><br> for every tenant.
+      </h1>
+      <p class="hero-sub">
+        Each company gets a branded assistant grounded in its own private documents.
+        When the knowledge base can't answer, the LLM steps in — and the answer is
+        <strong>imported back into RAG memory</strong> so it never has to be generated twice.
+      </p>
+      <div class="hero-cta">
+        <a href="/chat" class="btn-primary lg"><i class="fa-solid fa-comments"></i> Launch Live Demo</a>
+        <a href="#how" class="btn-ghost lg">See how it works</a>
       </div>
+      <div class="hero-stats">
+        <div class="stat"><strong id="statTenants">3</strong><span>Isolated Tenants</span></div>
+        <div class="stat"><strong>RAG→LLM</strong><span>Auto-Import</span></div>
+        <div class="stat"><strong>100%</strong><span>Data Isolation</span></div>
+      </div>
+    </div>
+  </header>
 
-      <!-- Main: Chat + Analytics -->
-      <div class="main-content">
-        <!-- Empty State -->
-        <div id="emptyState" class="empty-state glass">
-          <div class="empty-state-icon"><i class="fa-solid fa-comments"></i></div>
-          <h3>Select a Tenant Workspace</h3>
-          <p>Choose a company from the left to chat with its branded, isolated AI assistant. Answers are grounded only in that tenant's private documents.</p>
+  <!-- ═══════════════ FEATURES ═══════════════ -->
+  <section id="features" class="section">
+    <div class="section-head">
+      <span class="eyebrow">Why RAGSuite</span>
+      <h2>Enterprise RAG, done right</h2>
+      <p>Everything a multi-tenant knowledge platform needs — isolation, personas, and a memory that gets smarter with every question.</p>
+    </div>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon" style="--c:#4f46e5"><i class="fa-solid fa-shield-halved"></i></div>
+        <h3>Complete Data Isolation</h3>
+        <p>Every tenant has its own knowledge store. One company's documents — and imported answers — never leak into another's.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="--c:#0891b2"><i class="fa-solid fa-brain"></i></div>
+        <h3>RAG-First, LLM Fallback</h3>
+        <p>Answers come from the tenant's memory first. Only when there's no match does the OpenAI LLM generate a fresh response.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="--c:#b45309"><i class="fa-solid fa-cloud-arrow-down"></i></div>
+        <h3>Auto-Import to Memory</h3>
+        <p>Every LLM answer is written back into RAG memory. The same question becomes an instant cache hit — the KB grows itself.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="--c:#db2777"><i class="fa-solid fa-masks-theater"></i></div>
+        <h3>Custom Personas</h3>
+        <p>Each assistant carries a tenant-specific persona and system prompt, so the tone matches the brand out of the box.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="--c:#059669"><i class="fa-solid fa-chart-line"></i></div>
+        <h3>Live Analytics</h3>
+        <p>See the answer source, retrieval score, KB size and citations for every single query in real time.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="--c:#7c3aed"><i class="fa-solid fa-quote-left"></i></div>
+        <h3>Grounded Citations</h3>
+        <p>Answers ship with the source chunks they came from and a relevance score — no black-box responses.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ HOW IT WORKS ═══════════════ -->
+  <section id="how" class="section alt">
+    <div class="section-head">
+      <span class="eyebrow">The Flow</span>
+      <h2>How a question is answered</h2>
+      <p>RAG-first routing with an intelligent fallback that makes the system smarter over time.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h4><i class="fa-solid fa-magnifying-glass"></i> Retrieve</h4>
+        <p>The question is matched against the tenant's isolated RAG memory using similarity scoring.</p>
+      </div>
+      <div class="step-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h4><i class="fa-solid fa-code-branch"></i> Route</h4>
+        <p>Strong match → answer straight from memory. Weak match → hand off to the LLM.</p>
+      </div>
+      <div class="step-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h4><i class="fa-solid fa-robot"></i> Generate</h4>
+        <p>The OpenAI LLM answers in the tenant's persona, using only that tenant's context.</p>
+      </div>
+      <div class="step-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+      <div class="step highlight">
+        <div class="step-num">4</div>
+        <h4><i class="fa-solid fa-cloud-arrow-down"></i> Import</h4>
+        <p>The answer is saved back into RAG memory — the same question is a cache hit forever after.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ CTA ═══════════════ -->
+  <section id="demo" class="section">
+    <div class="cta-band">
+      <div class="cta-glow"></div>
+      <div class="cta-content">
+        <span class="hero-pill"><i class="fa-solid fa-comments"></i> Interactive workspace</span>
+        <h2>Ready to talk to an isolated assistant?</h2>
+        <p>Open the full chat workspace — pick a tenant, ask questions, and watch answers come from RAG memory or get generated &amp; imported by the LLM in real time.</p>
+        <a href="/chat" class="btn-primary lg"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Chat Workspace</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ FOOTER ═══════════════ -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a href="#top" class="nav-brand">
+          <span class="nav-logo"><i class="fa-solid fa-layer-group"></i></span>
+          <span class="nav-brand-text">RAG<span>Suite</span></span>
+        </a>
+        <p>Multi-tenant RAG platform with LLM fallback and self-growing memory. Day 21 of the 30 Days of AI Agents challenge.</p>
+      </div>
+      <div class="footer-cols">
+        <div class="footer-col">
+          <h5>Platform</h5>
+          <a href="#features">Features</a>
+          <a href="#how">How it works</a>
+          <a href="/chat">Live Demo</a>
         </div>
-
-        <!-- Active Workspace -->
-        <div id="workspace" style="display: none;">
-          <!-- Persona Hero -->
-          <div class="hero-card glass" id="personaHero">
-            <div class="hero-left">
-              <div class="persona-avatar" id="personaAvatar"><i class="fa-solid fa-robot"></i></div>
-              <div>
-                <div class="tenant-name" id="tenantName">—</div>
-                <div class="persona-name" id="personaName">—</div>
-              </div>
-            </div>
-            <div class="hero-right">
-              <div class="usage-mini">
-                <span class="usage-label">Quota Used</span>
-                <div class="quota-bar"><div id="quotaFill" class="quota-fill"></div></div>
-                <span class="usage-val" id="quotaText">0 / 0</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Chat Window -->
-          <div class="chat-card glass">
-            <div id="chatLog" class="chat-log">
-              <div class="chat-placeholder">Ask a question grounded in this tenant's knowledge base.</div>
-            </div>
-            <form id="queryForm" class="chat-input-row" onsubmit="handleQuery(event)">
-              <input type="text" id="questionInput" class="chat-input" placeholder="Ask the assistant..." autocomplete="off" required>
-              <button type="submit" id="sendBtn" class="btn-send"><i class="fa-solid fa-paper-plane"></i></button>
-            </form>
-          </div>
-
-          <!-- Analytics Grid -->
-          <div class="metrics-grid">
-            <div class="metric-card glass">
-              <h4 class="card-title"><i class="fa-solid fa-quote-left"></i> Retrieved Citations</h4>
-              <div id="citationList" class="citation-list">
-                <p class="muted-note">Citations from the last query appear here.</p>
-              </div>
-            </div>
-            <div class="metric-card glass">
-              <h4 class="card-title"><i class="fa-solid fa-gauge-high"></i> Usage Analytics</h4>
-              <ul class="data-list">
-                <li><span>Answer Source</span> <strong id="ansSource">-</strong></li>
-                <li><span>Retrieval Score</span> <strong id="retScore">-</strong></li>
-                <li><span>KB Entries</span> <strong id="kbEntries">-</strong></li>
-                <li><span>Sources Cited</span> <strong id="srcCited">-</strong></li>
-                <li><span>Isolation Verified</span> <strong id="isoVerified">-</strong></li>
-              </ul>
-            </div>
-          </div>
+        <div class="footer-col">
+          <h5>Stack</h5>
+          <span>FastAPI · OpenAI</span>
+          <span>RAG + Auto-Import</span>
+          <span>Vanilla JS · CSS</span>
+        </div>
+        <div class="footer-col">
+          <h5>Author</h5>
+          <a href="https://github.com/MaryamMumtaz-piaic" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://maryam-piaic.vercel.app" target="_blank" rel="noopener">Portfolio</a>
+          <a href="https://www.linkedin.com/in/maryammumtaz-" target="_blank" rel="noopener">LinkedIn</a>
         </div>
       </div>
     </div>
-  </div>
+    <div class="footer-bottom">
+      <span>© 2026 Maryam Mumtaz — Marsa Empower</span>
+      <span>Built with FastAPI &amp; OpenAI</span>
+    </div>
+  </footer>
 
   <script>
-    let tenants = [];
-    let activeTenant = null;
-
-    async function loadTenants() {
-      try {
-        const res = await fetch("/api/tenants");
-        const json = await res.json();
-        tenants = json.data;
-        renderTenantList();
-      } catch (err) {
-        document.getElementById("tenantList").innerHTML =
-          '<div class="tenant-loading">Failed to load tenants.</div>';
-      }
-    }
-
-    function renderTenantList() {
-      const list = document.getElementById("tenantList");
-      list.innerHTML = "";
-      tenants.forEach(t => {
-        const el = document.createElement("button");
-        el.className = "tenant-btn";
-        el.style.setProperty("--accent", t.accent);
-        el.onclick = () => selectTenant(t.id);
-        el.innerHTML = `
-          <span class="tenant-dot" style="background:${t.accent}"></span>
-          <span class="tenant-meta">
-            <strong>${t.name}</strong>
-            <small>${t.source_count} sources · ${t.quota.toLocaleString()} tok/mo</small>
-          </span>`;
-        el.dataset.id = t.id;
-        list.appendChild(el);
-      });
-    }
-
-    function selectTenant(id) {
-      activeTenant = tenants.find(t => t.id === id);
-      if (!activeTenant) return;
-
-      document.querySelectorAll(".tenant-btn").forEach(b =>
-        b.classList.toggle("active", b.dataset.id === id));
-
-      const accent = activeTenant.accent;
-      document.documentElement.style.setProperty("--primary", accent);
-
-      document.getElementById("emptyState").style.display = "none";
-      document.getElementById("workspace").style.display = "block";
-      document.getElementById("kbBox").style.display = "block";
-
-      document.getElementById("tenantName").innerText = activeTenant.name;
-      document.getElementById("personaName").innerText = activeTenant.persona;
-      document.getElementById("personaAvatar").style.background =
-        `linear-gradient(135deg, ${accent}, ${accent}aa)`;
-
-      // Sources
-      const sl = document.getElementById("sourceList");
-      sl.innerHTML = "";
-      activeTenant.sources.forEach(s => {
-        const li = document.createElement("li");
-        const icon = s.startsWith("http") ? "fa-link"
-          : s.startsWith("Notion") ? "fa-n"
-          : s.endsWith(".pdf") ? "fa-file-pdf"
-          : s.endsWith(".docx") ? "fa-file-word"
-          : s.endsWith(".csv") || s.endsWith(".xlsx") ? "fa-file-csv"
-          : "fa-file-lines";
-        li.innerHTML = `<i class="fa-solid ${icon}"></i> ${s}`;
-        sl.appendChild(li);
-      });
-
-      // Reset chat & analytics
-      document.getElementById("chatLog").innerHTML =
-        '<div class="chat-placeholder">Ask a question grounded in ' + activeTenant.name + "'s knowledge base.</div>";
-      document.getElementById("citationList").innerHTML =
-        '<p class="muted-note">Citations from the last query appear here.</p>';
-      ["ansSource","retScore","kbEntries","srcCited","isoVerified"].forEach(idv =>
-        document.getElementById(idv).innerText = "-");
-      document.getElementById("quotaFill").style.width = "0%";
-      document.getElementById("quotaText").innerText = activeTenant.source_count + " KB entries";
-    }
-
-    function addMessage(role, text) {
-      const log = document.getElementById("chatLog");
-      const ph = log.querySelector(".chat-placeholder");
-      if (ph) ph.remove();
-      const div = document.createElement("div");
-      div.className = `chat-msg ${role}`;
-      div.innerHTML = `<div class="bubble">${text}</div>`;
-      log.appendChild(div);
-      log.scrollTop = log.scrollHeight;
-      return div;
-    }
-
-    async function handleQuery(e) {
-      e.preventDefault();
-      if (!activeTenant) return;
-      const input = document.getElementById("questionInput");
-      const q = input.value.trim();
-      if (!q) return;
-
-      addMessage("user", q);
-      input.value = "";
-      const btn = document.getElementById("sendBtn");
-      btn.disabled = true;
-
-      const thinking = addMessage("bot", '<i class="fa-solid fa-circle-notch fa-spin"></i> Retrieving from isolated store...');
-
-      try {
-        const res = await fetch("/api/query", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ tenant_id: activeTenant.id, question: q })
-        });
-        const json = await res.json();
-        if (json.status === "success") {
-          renderAnswer(thinking, json.data);
-        } else {
-          thinking.querySelector(".bubble").innerText = "Error: " + (json.detail || "Unknown");
-        }
-      } catch (err) {
-        thinking.querySelector(".bubble").innerText = "Server error: " + err.message;
-      } finally {
-        btn.disabled = false;
-        input.focus();
-      }
-    }
-
-    function renderAnswer(thinkingEl, data) {
-      const fromRag = data.answer_source === "rag_memory";
-      const badge = fromRag
-        ? '<span class="src-tag rag"><i class="fa-solid fa-database"></i> from RAG memory</span>'
-        : '<span class="src-tag llm"><i class="fa-solid fa-cloud-arrow-down"></i> generated by LLM &amp; imported to RAG</span>';
-      thinkingEl.querySelector(".bubble").innerHTML =
-        `<div class="bubble-text">${data.answer}</div>${badge}`;
-
-      // Citations
-      const cl = document.getElementById("citationList");
-      cl.innerHTML = "";
-      data.citations.forEach(c => {
-        const div = document.createElement("div");
-        div.className = "citation-item";
-        div.innerHTML = `
-          <div class="citation-head">
-            <span class="citation-src">${c.source}</span>
-            <span class="citation-score">${Math.round(c.relevance * 100)}%</span>
-          </div>
-          <p class="citation-chunk">${c.chunk}</p>`;
-        cl.appendChild(div);
-      });
-
-      // Usage
-      const u = data.usage;
-      document.getElementById("ansSource").innerHTML = fromRag
-        ? '<span style="color:var(--primary)">RAG Memory</span>'
-        : '<span style="color:var(--hold, #b45309)">LLM → imported</span>';
-      document.getElementById("retScore").innerText = u.retrieval_score;
-      document.getElementById("kbEntries").innerText = u.kb_entries;
-      document.getElementById("srcCited").innerText = u.sources_cited;
-      document.getElementById("isoVerified").innerHTML = u.isolation_verified
-        ? '<span style="color:var(--buy)"><i class="fa-solid fa-circle-check"></i> Yes</span>'
-        : '<span style="color:var(--sell)">No</span>';
-
-      // Reflect that the KB grew when an LLM answer was imported.
-      const t = tenants.find(x => x.id === data.tenant_id);
-      if (t) t.source_count = u.kb_entries;
-      document.getElementById("quotaText").innerText = u.kb_entries + " KB entries";
-    }
-
-    loadTenants();
+    // Home page only needs the live tenant count for the hero stat.
+    fetch("/api/tenants")
+      .then(r => r.json())
+      .then(j => { document.getElementById("statTenants").innerText = j.data.length; })
+      .catch(() => {});
   </script>
 </body>
 </html>
